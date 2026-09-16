@@ -1,0 +1,1802 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Venue Reservation Record</title>
+<meta name="description" content="Thavorn Beach Village &amp; Spa — live 2026 venue reservation dashboard, calendar and booking intake.">
+</head>
+<body>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,ital@9..144,300..700,0..1&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root{
+    --bg:#F1F6F5;
+    --surface:#FFFFFF;
+    --surface-alt:#E7EFEC;
+    --ink:#16302E;
+    --ink-soft:#4C6663;
+    --ink-faint:#7C938F;
+    --border:#D3DEDA;
+    --border-soft:#E4EBE8;
+    --accent:#0E5C56;
+    --accent-ink:#083E3A;
+    --accent-soft:#DCEEEA;
+    --gold:#A97F3B;
+    --gold-soft:#F3E8D2;
+    --gold-ink:#6B4E1E;
+
+    --inq-fg:#3E5C78; --inq-bg:#E5ECF3;
+    --pros-fg:#2C5B8F; --pros-bg:#DEE9F5;
+    --ten-fg:#946A1F;  --ten-bg:#F3E6CB;
+    --def-fg:#1F6E4E;  --def-bg:#DBEFE3;
+    --cxl-fg:#6B706C;  --cxl-bg:#E7E8E5;
+    --lost-fg:#9C453D; --lost-bg:#F3DFDC;
+    --td-fg:#54524C;   --td-bg:#E7E4DC;
+    --rose-fg:#9C4F72; --rose-bg:#F3E1EA;
+
+    --shadow: 0 1px 2px rgba(15,45,42,0.06), 0 8px 24px -12px rgba(15,45,42,0.18);
+  }
+
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0D1917;
+      --surface:#122522;
+      --surface-alt:#16302C;
+      --ink:#E9F3F0;
+      --ink-soft:#A8C2BC;
+      --ink-faint:#7C978F;
+      --border:#274641;
+      --border-soft:#1D3733;
+      --accent:#49B3A4;
+      --accent-ink:#BFEAE1;
+      --accent-soft:#17403A;
+      --gold:#D9AE64;
+      --gold-soft:#3B2F19;
+      --gold-ink:#EAC98C;
+
+      --inq-fg:#AFC7E0;  --inq-bg:#20364B;
+      --pros-fg:#9CC1EC; --pros-bg:#1C3958;
+      --ten-fg:#E7C787;  --ten-bg:#3E3013;
+      --def-fg:#8FDBB4;  --def-bg:#173C2C;
+      --cxl-fg:#C4C8C3;  --cxl-bg:#33352F;
+      --lost-fg:#E9A79E; --lost-bg:#42221E;
+      --td-fg:#C9C6BB;   --td-bg:#302E27;
+      --rose-fg:#E3A0C0; --rose-bg:#3B2231;
+
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 12px 28px -14px rgba(0,0,0,0.55);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0D1917;
+    --surface:#122522;
+    --surface-alt:#16302C;
+    --ink:#E9F3F0;
+    --ink-soft:#A8C2BC;
+    --ink-faint:#7C978F;
+    --border:#274641;
+    --border-soft:#1D3733;
+    --accent:#49B3A4;
+    --accent-ink:#BFEAE1;
+    --accent-soft:#17403A;
+    --gold:#D9AE64;
+    --gold-soft:#3B2F19;
+    --gold-ink:#EAC98C;
+
+    --inq-fg:#AFC7E0;  --inq-bg:#20364B;
+    --pros-fg:#9CC1EC; --pros-bg:#1C3958;
+    --ten-fg:#E7C787;  --ten-bg:#3E3013;
+    --def-fg:#8FDBB4;  --def-bg:#173C2C;
+    --cxl-fg:#C4C8C3;  --cxl-bg:#33352F;
+    --lost-fg:#E9A79E; --lost-bg:#42221E;
+    --td-fg:#C9C6BB;   --td-bg:#302E27;
+    --rose-fg:#E3A0C0; --rose-bg:#3B2231;
+
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 12px 28px -14px rgba(0,0,0,0.55);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Public Sans', ui-sans-serif, system-ui, sans-serif;
+    margin:0;
+    padding-block:2.5rem 5rem;
+  }
+  .wrap{
+    max-width:960px;
+    margin:0 auto;
+    padding-inline:1.25rem;
+    display:flex;
+    flex-direction:column;
+    gap:2rem;
+  }
+  h1,h2,h3{
+    font-family:'Fraunces', Georgia, serif;
+    text-wrap:balance;
+    margin:0;
+    color:var(--ink);
+  }
+  .num{font-family:'IBM Plex Mono', ui-monospace, monospace; font-variant-numeric:tabular-nums;}
+
+  /* ---------- Masthead ---------- */
+  .masthead{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    gap:1.5rem;
+    flex-wrap:wrap;
+    border-bottom:2px solid var(--accent);
+    padding-bottom:1.5rem;
+  }
+  .masthead .brand-block{display:flex; flex-direction:column; gap:.4rem;}
+  .eyebrow{
+    font-size:.72rem;
+    font-weight:600;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--gold-ink);
+  }
+  .masthead h1{font-size:2.1rem; font-weight:600; line-height:1.1;}
+  .masthead .sub{color:var(--ink-soft); font-size:.95rem; max-width:34ch;}
+  .meta-block{
+    display:grid;
+    grid-template-columns:auto auto;
+    gap:.35rem 1rem;
+    font-size:.82rem;
+    color:var(--ink-soft);
+    text-align:right;
+  }
+  .meta-block dt{font-weight:600; color:var(--ink-faint); text-align:right;}
+  .meta-block dd{margin:0; font-family:'IBM Plex Mono', monospace;}
+  .meta-block input{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.82rem;
+    text-align:right;
+    border:none;
+    border-bottom:1px dashed var(--border);
+    background:transparent;
+    color:var(--ink);
+    width:11ch;
+    padding:.1rem 0;
+  }
+  .meta-block input:focus{outline:none; border-bottom-color:var(--accent);}
+
+  /* ---------- Status legend ---------- */
+  .legend{
+    display:flex;
+    flex-wrap:wrap;
+    gap:.6rem;
+    background:var(--surface);
+    border:1px solid var(--border-soft);
+    border-radius:10px;
+    padding:.9rem 1rem;
+    box-shadow:var(--shadow);
+  }
+  .legend-title{
+    font-size:.72rem;
+    font-weight:700;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+    width:100%;
+    margin-bottom:.15rem;
+  }
+  .chip{
+    display:inline-flex;
+    align-items:baseline;
+    gap:.45rem;
+    padding:.3rem .6rem;
+    border-radius:100px;
+    font-size:.78rem;
+    line-height:1.3;
+  }
+  .chip b{font-family:'IBM Plex Mono', monospace; font-size:.72rem; letter-spacing:.03em;}
+  .chip span{color:inherit; opacity:.85;}
+  .chip.inq{background:var(--inq-bg); color:var(--inq-fg);}
+  .chip.pros{background:var(--pros-bg); color:var(--pros-fg);}
+  .chip.ten{background:var(--ten-bg); color:var(--ten-fg);}
+  .chip.def{background:var(--def-bg); color:var(--def-fg);}
+  .chip.cxl{background:var(--cxl-bg); color:var(--cxl-fg);}
+  .chip.lost{background:var(--lost-bg); color:var(--lost-fg);}
+  .chip.td{background:var(--td-bg); color:var(--td-fg);}
+
+  /* ---------- Section shell ---------- */
+  .section{
+    background:var(--surface);
+    border:1px solid var(--border-soft);
+    border-radius:14px;
+    box-shadow:var(--shadow);
+    overflow:hidden;
+  }
+  .section-head{
+    display:flex;
+    align-items:center;
+    gap:.9rem;
+    padding:1.25rem 1.5rem;
+    background:var(--surface-alt);
+    border-bottom:1px solid var(--border-soft);
+  }
+  .section-head .mark{
+    font-family:'Fraunces', serif;
+    font-style:italic;
+    font-weight:300;
+    font-size:1.6rem;
+    color:var(--gold);
+    line-height:1;
+  }
+  .section-head h2{font-size:1.35rem; font-weight:600;}
+  .section-head .tag{
+    margin-left:auto;
+    font-size:.72rem;
+    font-weight:600;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+    border:1px solid var(--border);
+    border-radius:100px;
+    padding:.2rem .65rem;
+  }
+  .section-body{padding:1.5rem; display:flex; flex-direction:column; gap:1.75rem;}
+
+  .block-label{
+    font-size:.72rem;
+    font-weight:700;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--gold-ink);
+    margin-bottom:.85rem;
+    display:block;
+  }
+
+  /* ---------- Field grid ---------- */
+  .field-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(150px,1fr));
+    gap:1rem 1.25rem;
+  }
+  .field{display:flex; flex-direction:column; gap:.3rem;}
+  .field label{font-size:.78rem; color:var(--ink-soft); font-weight:500;}
+  .field input, .field select, .field textarea{
+    font:inherit;
+    font-size:.9rem;
+    color:var(--ink);
+    background:var(--bg);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:.55rem .65rem;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{
+    outline:2px solid var(--accent);
+    outline-offset:1px;
+    border-color:var(--accent);
+  }
+  .field.wide{grid-column:1 / -1;}
+
+  /* status radio pills */
+  .status-picker{display:flex; flex-wrap:wrap; gap:.5rem;}
+  .status-picker label{
+    display:inline-flex;
+    align-items:center;
+    gap:.4rem;
+    padding:.4rem .75rem;
+    border-radius:100px;
+    border:1px solid var(--border);
+    font-size:.82rem;
+    font-weight:500;
+    color:var(--ink-soft);
+    cursor:pointer;
+  }
+  .status-picker input{accent-color:var(--accent); margin:0;}
+  .status-picker input:checked + span{color:var(--ink); font-weight:700;}
+  .status-picker label:has(input:checked){border-color:var(--accent); background:var(--accent-soft);}
+
+  /* ---------- Revenue table ---------- */
+  .rev-wrap{overflow-x:auto; border:1px solid var(--border-soft); border-radius:10px;}
+  table.rev{
+    width:100%;
+    border-collapse:collapse;
+    min-width:640px;
+    font-size:.85rem;
+  }
+  table.rev caption{
+    text-align:left;
+    font-size:.72rem;
+    font-weight:700;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+    padding:.7rem .9rem .5rem;
+    background:var(--surface-alt);
+  }
+  table.rev th, table.rev td{
+    padding:.55rem .75rem;
+    border-bottom:1px solid var(--border-soft);
+    text-align:right;
+  }
+  table.rev th:first-child, table.rev td:first-child{text-align:left;}
+  table.rev thead th{
+    background:var(--surface-alt);
+    color:var(--ink-soft);
+    font-weight:600;
+    font-size:.72rem;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+    white-space:nowrap;
+  }
+  table.rev tbody tr:last-child td{border-bottom:none;}
+  table.rev input{
+    width:100%;
+    min-width:9ch;
+    text-align:right;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.85rem;
+    border:1px solid transparent;
+    background:transparent;
+    color:var(--ink);
+    border-radius:6px;
+    padding:.3rem .35rem;
+  }
+  table.rev input:focus{outline:none; border-color:var(--accent); background:var(--bg);}
+  table.rev tr.total td{font-weight:700; background:var(--accent-soft); color:var(--accent-ink);}
+  table.rev tr.total input{color:var(--accent-ink); font-weight:700;}
+  table.rev tr.variant td{font-weight:600;}
+  .variant-amt.neg{color:var(--lost-fg);}
+  .variant-amt.pos{color:var(--def-fg);}
+
+  .currency-note{font-size:.72rem; color:var(--ink-faint); padding:.6rem .9rem; background:var(--surface-alt); border-top:1px solid var(--border-soft);}
+
+  /* ---------- footer / actions ---------- */
+  .actions{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:1rem;
+    flex-wrap:wrap;
+    color:var(--ink-faint);
+    font-size:.78rem;
+  }
+  .actions button{
+    font:inherit;
+    font-weight:600;
+    font-size:.82rem;
+    color:var(--surface);
+    background:var(--accent);
+    border:none;
+    border-radius:8px;
+    padding:.65rem 1.1rem;
+    cursor:pointer;
+  }
+  .actions button:hover{background:var(--accent-ink);}
+  .actions button:focus-visible{outline:2px solid var(--gold); outline-offset:2px;}
+
+  /* ---------- Jump nav ---------- */
+  .jumpnav{
+    display:flex;
+    gap:1.25rem;
+    flex-wrap:wrap;
+    font-size:.8rem;
+    font-weight:600;
+  }
+  .jumpnav a{
+    color:var(--ink-soft);
+    text-decoration:none;
+    padding-bottom:.15rem;
+    border-bottom:2px solid transparent;
+  }
+  .jumpnav a:hover{color:var(--accent); border-color:var(--gold);}
+
+  /* ---------- KPI row ---------- */
+  .kpi-row{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(160px,1fr));
+    gap:1px;
+    background:var(--border-soft);
+    border:1px solid var(--border-soft);
+    border-radius:14px;
+    overflow:hidden;
+    box-shadow:var(--shadow);
+  }
+  .kpi-tile{
+    background:var(--surface);
+    padding:1.1rem 1.25rem;
+    display:flex;
+    flex-direction:column;
+    gap:.3rem;
+  }
+  .kpi-tile .kpi-label{font-size:.7rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-faint);}
+  .kpi-tile .kpi-value{font-family:'IBM Plex Mono', monospace; font-size:1.5rem; font-weight:500; color:var(--ink); font-variant-numeric:tabular-nums;}
+  .kpi-tile .kpi-sub{font-size:.76rem; color:var(--ink-soft);}
+  .kpi-tile .kpi-sub.pos{color:var(--def-fg);}
+  .kpi-tile .kpi-sub.neg{color:var(--lost-fg);}
+
+  /* ---------- Chart card ---------- */
+  .chart-card{
+    background:var(--surface);
+    border:1px solid var(--border-soft);
+    border-radius:14px;
+    box-shadow:var(--shadow);
+    padding:1.25rem 1.5rem 1rem;
+  }
+  .chart-card h3{font-size:1.05rem; font-weight:600;}
+  .chart-sub{font-size:.8rem; color:var(--ink-soft); margin:.2rem 0 1.1rem;}
+  .chart-legend{display:flex; gap:1.25rem; font-size:.76rem; color:var(--ink-soft); margin-bottom:.9rem; flex-wrap:wrap;}
+  .chart-legend .lg-item{display:inline-flex; align-items:center; gap:.4rem;}
+  .lg-swatch{width:12px; height:12px; border-radius:3px; display:inline-block;}
+  .lg-swatch.bar{background:var(--accent);}
+  .lg-tick{width:12px; height:2px; background:var(--gold); display:inline-block;}
+  .chart-row{
+    display:grid;
+    grid-template-columns:repeat(12, 1fr);
+    gap:.6rem;
+    align-items:end;
+    height:180px;
+    padding-top:1.5rem;
+    border-bottom:1px solid var(--border);
+  }
+  .bar-col{
+    position:relative;
+    height:100%;
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+  }
+  .bar-col .bar{
+    width:60%;
+    min-width:10px;
+    background:var(--accent);
+    border-radius:4px 4px 0 0;
+    position:relative;
+    cursor:pointer;
+    transition:opacity .15s;
+  }
+  .bar-col .bar:hover{opacity:.82;}
+  .bar-col .bar-tick{
+    position:absolute;
+    left:14%;
+    right:14%;
+    height:2px;
+    background:var(--gold);
+    z-index:2;
+  }
+  .bar-col .bar-tick::after{
+    content:'';
+  }
+  .bar-value{
+    position:absolute;
+    top:-1.3rem;
+    left:50%;
+    transform:translateX(-50%);
+    font-size:.62rem;
+    font-family:'IBM Plex Mono', monospace;
+    color:var(--ink-faint);
+    white-space:nowrap;
+  }
+  .chart-months{
+    display:grid;
+    grid-template-columns:repeat(12, 1fr);
+    gap:.6rem;
+    margin-top:.5rem;
+  }
+  .chart-months span{
+    text-align:center;
+    font-size:.68rem;
+    font-weight:600;
+    color:var(--ink-faint);
+    text-transform:uppercase;
+  }
+  .chart-tooltip{
+    position:fixed;
+    pointer-events:none;
+    background:var(--ink);
+    color:var(--bg);
+    font-size:.74rem;
+    line-height:1.5;
+    padding:.5rem .65rem;
+    border-radius:8px;
+    box-shadow:var(--shadow);
+    z-index:50;
+    opacity:0;
+    transition:opacity .1s;
+    max-width:220px;
+  }
+  .chart-tooltip.show{opacity:1;}
+  .chart-tooltip b{font-family:'IBM Plex Mono', monospace;}
+
+  /* ---------- Funnel ---------- */
+  .funnel-row{display:flex; flex-wrap:wrap; gap:.75rem;}
+  .funnel-tile{
+    flex:1 1 110px;
+    border-radius:10px;
+    padding:.75rem .9rem;
+    display:flex;
+    flex-direction:column;
+    gap:.15rem;
+  }
+  .funnel-tile .fn-count{font-family:'IBM Plex Mono', monospace; font-size:1.3rem; font-weight:600;}
+  .funnel-tile .fn-label{font-size:.68rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; opacity:.85;}
+  .funnel-tile.inq{background:var(--inq-bg); color:var(--inq-fg);}
+  .funnel-tile.pros{background:var(--pros-bg); color:var(--pros-fg);}
+  .funnel-tile.ten{background:var(--ten-bg); color:var(--ten-fg);}
+  .funnel-tile.def{background:var(--def-bg); color:var(--def-fg);}
+  .funnel-tile.cxl{background:var(--cxl-bg); color:var(--cxl-fg);}
+  .funnel-tile.lost{background:var(--lost-bg); color:var(--lost-fg);}
+  .funnel-tile.td{background:var(--td-bg); color:var(--td-fg);}
+
+  /* ---------- type tags ---------- */
+  .tag-type{
+    display:inline-flex;
+    align-items:center;
+    font-size:.68rem;
+    font-weight:700;
+    letter-spacing:.04em;
+    padding:.15rem .5rem;
+    border-radius:100px;
+    white-space:nowrap;
+  }
+  .tag-type.wedding{background:var(--gold-soft); color:var(--gold-ink);}
+  .tag-type.mice{background:var(--accent-soft); color:var(--accent-ink);}
+  .tag-type.romantic{background:var(--rose-bg); color:var(--rose-fg);}
+
+  .status-dot{display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:.35rem; vertical-align:middle;}
+  .status-dot.inq{background:var(--inq-fg);}
+  .status-dot.pros{background:var(--pros-fg);}
+  .status-dot.ten{background:var(--ten-fg);}
+  .status-dot.def{background:var(--def-fg);}
+  .status-dot.cxl{background:var(--cxl-fg);}
+  .status-dot.lost{background:var(--lost-fg);}
+  .status-dot.td{background:var(--td-fg);}
+
+  /* ---------- Venue directory ---------- */
+  .venue-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(260px,1fr));
+    gap:1rem;
+  }
+  .venue-card{
+    background:var(--surface);
+    border:1px solid var(--border-soft);
+    border-radius:12px;
+    box-shadow:var(--shadow);
+    padding:1rem 1.1rem;
+    display:flex;
+    flex-direction:column;
+    gap:.6rem;
+  }
+  .venue-card.empty{opacity:.6;}
+  .venue-card-head{display:flex; justify-content:space-between; align-items:baseline; gap:.5rem;}
+  .venue-card-head h4{font-family:'Fraunces', serif; font-size:1.05rem; font-weight:600; margin:0;}
+  .venue-count{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.72rem;
+    font-weight:600;
+    color:var(--accent-ink);
+    background:var(--accent-soft);
+    border-radius:100px;
+    padding:.1rem .55rem;
+    white-space:nowrap;
+  }
+  .venue-events{display:flex; flex-direction:column; gap:.45rem;}
+  .venue-event{
+    display:flex;
+    align-items:baseline;
+    gap:.4rem;
+    font-size:.79rem;
+    line-height:1.4;
+  }
+  .venue-event .ve-date{font-family:'IBM Plex Mono', monospace; font-size:.72rem; color:var(--ink-faint); white-space:nowrap;}
+  .venue-event .ve-name{color:var(--ink); flex:1;}
+  .venue-empty-note{font-size:.78rem; color:var(--ink-faint); font-style:italic;}
+  .venue-more-btn{
+    align-self:flex-start;
+    font:inherit;
+    font-size:.76rem;
+    font-weight:600;
+    color:var(--accent-ink);
+    background:var(--accent-soft);
+    border:none;
+    border-radius:100px;
+    padding:.3rem .7rem;
+    cursor:pointer;
+  }
+  .venue-more-btn:hover{background:var(--gold-soft); color:var(--gold-ink);}
+
+  /* ---------- Venue detail modal ---------- */
+  .modal-overlay{
+    position:fixed; inset:0;
+    background:rgba(8,20,18,.45);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:1.5rem;
+    z-index:100;
+  }
+  .modal-overlay.hidden{display:none;}
+  .modal-panel{
+    background:var(--surface);
+    border:1px solid var(--border-soft);
+    border-radius:14px;
+    box-shadow:var(--shadow);
+    width:min(640px, 100%);
+    max-height:min(80vh, 720px);
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+  }
+  .modal-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:.75rem;
+    padding:1.1rem 1.3rem;
+    border-bottom:1px solid var(--border-soft);
+  }
+  .modal-header h3{font-family:'Fraunces', serif; font-size:1.2rem; font-weight:600; margin:0;}
+  .modal-header .modal-sub{font-size:.78rem; color:var(--ink-faint); margin-top:.2rem;}
+  .modal-close{
+    font:inherit;
+    font-size:1.1rem;
+    line-height:1;
+    border:none;
+    background:var(--surface-alt);
+    color:var(--ink-soft);
+    width:2rem; height:2rem;
+    border-radius:100%;
+    cursor:pointer;
+    flex-shrink:0;
+  }
+  .modal-close:hover{background:var(--border-soft); color:var(--ink);}
+  .modal-body{
+    overflow-y:auto;
+    padding:.25rem 1.3rem 1.3rem;
+  }
+  .modal-event-row{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:.5rem;
+    padding:.7rem 0;
+    border-bottom:1px solid var(--border-soft);
+    font-size:.85rem;
+  }
+  .modal-event-row:last-child{border-bottom:none;}
+  .modal-event-row .me-date{font-family:'IBM Plex Mono', monospace; font-size:.75rem; color:var(--ink-faint); white-space:nowrap; min-width:5.4rem;}
+  .modal-event-row .me-name{color:var(--ink); font-weight:600; flex:1 1 160px;}
+  .modal-event-row .me-meta{font-size:.75rem; color:var(--ink-soft); width:100%; display:flex; flex-wrap:wrap; gap:.5rem; align-items:center;}
+
+  /* ---------- Bookings table ---------- */
+  .table-toolbar{
+    display:flex;
+    flex-wrap:wrap;
+    gap:.6rem;
+    align-items:center;
+    margin-bottom:1rem;
+  }
+  .table-toolbar input[type="search"]{
+    flex:1 1 180px;
+    font:inherit;
+    font-size:.85rem;
+    padding:.5rem .75rem;
+    border:1px solid var(--border);
+    border-radius:8px;
+    background:var(--bg);
+    color:var(--ink);
+  }
+  .table-toolbar select{
+    font:inherit;
+    font-size:.82rem;
+    padding:.5rem .6rem;
+    border:1px solid var(--border);
+    border-radius:8px;
+    background:var(--bg);
+    color:var(--ink);
+  }
+  .status-filter{display:flex; gap:.35rem; flex-wrap:wrap;}
+  .status-filter button{
+    font:inherit;
+    font-size:.72rem;
+    font-weight:700;
+    letter-spacing:.03em;
+    padding:.35rem .65rem;
+    border-radius:100px;
+    border:1px solid var(--border);
+    background:var(--surface);
+    color:var(--ink-soft);
+    cursor:pointer;
+  }
+  .status-filter button.active{background:var(--accent); border-color:var(--accent); color:#fff;}
+  .table-count{font-size:.76rem; color:var(--ink-faint); margin-bottom:.6rem;}
+
+  /* ---------- View toggle ---------- */
+  .view-toggle{display:inline-flex; gap:.25rem; background:var(--surface-alt); border:1px solid var(--border-soft); border-radius:9px; padding:.2rem; margin-bottom:1.1rem;}
+  .view-toggle button{
+    font:inherit; font-size:.78rem; font-weight:600; letter-spacing:.02em;
+    padding:.4rem .85rem; border-radius:7px; border:none; background:transparent;
+    color:var(--ink-soft); cursor:pointer;
+  }
+  .view-toggle button.active{background:var(--surface); color:var(--accent-ink); box-shadow:var(--shadow);}
+
+  /* ---------- Calendar ---------- */
+  .cal-toolbar{display:flex; align-items:center; gap:.75rem; margin-bottom:.7rem;}
+  .cal-toolbar h3{font-size:1.1rem; font-weight:600; min-width:11ch;}
+  .cal-toolbar button{
+    font:inherit; font-size:1rem; line-height:1; width:2rem; height:2rem;
+    border:1px solid var(--border); border-radius:8px; background:var(--surface);
+    color:var(--ink-soft); cursor:pointer;
+  }
+  .cal-toolbar button:hover{border-color:var(--accent); color:var(--accent);}
+  .cal-legend{display:flex; gap:1.1rem; font-size:.76rem; color:var(--ink-soft); margin-bottom:.9rem; flex-wrap:wrap;}
+  .cal-legend .lg-item{display:inline-flex; align-items:center; gap:.4rem;}
+  .cal-dot{width:9px; height:9px; border-radius:50%; display:inline-block;}
+  .cal-dot.wedding{background:var(--gold);}
+  .cal-dot.mice{background:var(--accent);}
+  .cal-dot.romantic{background:var(--rose-fg);}
+  .cal-head{display:grid; grid-template-columns:repeat(7,1fr); gap:1px; background:var(--border-soft); border:1px solid var(--border-soft); border-radius:8px 8px 0 0; overflow:hidden;}
+  .cal-head span{background:var(--surface-alt); color:var(--ink-faint); font-size:.68rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; text-align:center; padding:.45rem 0;}
+  .cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:1px; background:var(--border-soft); border:1px solid var(--border-soft); border-top:none; border-radius:0 0 8px 8px; overflow:hidden;}
+  .cal-cell{background:var(--surface); min-height:108px; max-height:132px; padding:.35rem; display:flex; flex-direction:column; gap:.25rem;}
+  .cal-cell.blank{background:var(--bg);}
+  .cal-cell.today{box-shadow:inset 0 0 0 2px var(--gold);}
+  .cal-daynum{font-family:'IBM Plex Mono', monospace; font-size:.72rem; color:var(--ink-faint); font-weight:600;}
+  .cal-cell.today .cal-daynum{color:var(--gold-ink); font-weight:700;}
+  .cal-events{display:flex; flex-direction:column; gap:.2rem; overflow-y:auto;}
+  .cal-event{
+    display:flex; align-items:center; gap:.3rem;
+    font-size:.68rem; line-height:1.3; padding:.12rem .3rem; border-radius:4px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    background:var(--surface-alt); color:var(--ink);
+  }
+  .cal-event .cal-event-dot{width:6px; height:6px; border-radius:50%; flex:0 0 auto;}
+  .cal-empty-month{padding:2rem; text-align:center; color:var(--ink-faint); font-size:.85rem;}
+
+  @media (max-width:640px){
+    .cal-cell{min-height:64px;}
+    .cal-daynum{font-size:.64rem;}
+    .cal-event{font-size:.6rem;}
+  }
+
+  .table-scroll{max-height:560px; overflow:auto; border:1px solid var(--border-soft); border-radius:10px;}
+  table.bookings{width:100%; border-collapse:collapse; min-width:720px; font-size:.83rem;}
+  table.bookings thead th{
+    position:sticky; top:0; z-index:1;
+    background:var(--surface-alt);
+    color:var(--ink-soft);
+    font-size:.68rem;
+    font-weight:700;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+    text-align:left;
+    padding:.6rem .75rem;
+    border-bottom:1px solid var(--border);
+    white-space:nowrap;
+  }
+  table.bookings td{
+    padding:.55rem .75rem;
+    border-bottom:1px solid var(--border-soft);
+    vertical-align:top;
+  }
+  table.bookings td.num{text-align:right; font-family:'IBM Plex Mono', monospace; font-variant-numeric:tabular-nums; white-space:nowrap;}
+  table.bookings tbody tr:hover td{background:var(--surface-alt);}
+  table.bookings .venues-cell{color:var(--ink-soft); font-size:.78rem;}
+  table.bookings .row-hidden{display:none;}
+
+  /* ---------- Save bar ---------- */
+  .save-bar{display:flex; align-items:center; gap:.9rem; padding-top:.25rem;}
+  .save-btn{
+    font:inherit; font-size:.85rem; font-weight:700;
+    color:#fff; background:var(--accent); border:none; border-radius:8px;
+    padding:.7rem 1.2rem; cursor:pointer;
+  }
+  .save-btn:hover{background:var(--accent-ink);}
+  .save-btn:disabled{opacity:.5; cursor:default;}
+  .save-msg{font-size:.8rem; color:var(--ink-soft);}
+  .save-msg.ok{color:var(--def-fg); font-weight:600;}
+  .save-msg.err{color:var(--lost-fg); font-weight:600;}
+
+  #live-indicator{display:inline-flex; align-items:center; gap:.4rem;}
+  .live-dot{width:7px; height:7px; border-radius:50%; background:var(--ink-faint); display:inline-block;}
+  .live-dot.on{background:var(--def-fg); box-shadow:0 0 0 0 rgba(47,125,94,.5); animation:live-pulse 2s infinite;}
+  @keyframes live-pulse{
+    0%{box-shadow:0 0 0 0 rgba(47,125,94,.45);}
+    70%{box-shadow:0 0 0 6px rgba(47,125,94,0);}
+    100%{box-shadow:0 0 0 0 rgba(47,125,94,0);}
+  }
+  .tag-new{background:var(--def-bg); color:var(--def-fg); font-size:.62rem; font-weight:700; letter-spacing:.03em; padding:.05rem .4rem; border-radius:100px; margin-left:.4rem; vertical-align:middle;}
+
+  @media print{
+    body{padding:0; background:#fff;}
+    .no-print{display:none !important;}
+    .section{box-shadow:none; break-inside:avoid;}
+  }
+
+  @media (max-width:520px){
+    .masthead{flex-direction:column; align-items:flex-start;}
+    .meta-block{text-align:left; grid-template-columns:auto 1fr;}
+    .meta-block dt{text-align:left;}
+    .meta-block input{text-align:left;}
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="brand-block">
+      <span class="eyebrow">Thavorn Beach Village &amp; Spa &middot; Events &amp; Weddings</span>
+      <h1>Venue Reservation Record</h1>
+      <p class="sub">Booking intake for Wedding &amp; MICE events &mdash; 2026 season. One record per enquiry, carried through to Definite.</p>
+    </div>
+    <dl class="meta-block">
+      <dt>Reference No.</dt><dd><input type="text" id="ref-no" placeholder="TBV-26-___"></dd>
+      <dt>Prepared by</dt><dd><input type="text" id="prepared-by" placeholder="initials"></dd>
+      <dt>Date raised</dt><dd><input type="date" id="date-raised"></dd>
+    </dl>
+  </header>
+
+  <nav class="jumpnav no-print" aria-label="Section jump links">
+    <a href="#dashboard">Dashboard</a>
+    <a href="#by-venue">By venue</a>
+    <a href="#all-bookings">All bookings</a>
+    <a href="#wedding">New wedding</a>
+    <a href="#mice">New MICE</a>
+  </nav>
+
+  <section class="legend" aria-label="Status legend">
+    <span class="legend-title">Status legend</span>
+    <span class="chip inq"><b>INQ</b><span>New Inquiry &mdash; quoted initial price</span></span>
+    <span class="chip pros"><b>PROS</b><span>Prospect &mdash; contract &amp; invoice submitted</span></span>
+    <span class="chip ten"><b>TEN</b><span>Tentative &mdash; signed contract or 1st deposit paid</span></span>
+    <span class="chip def"><b>DEF</b><span>Definite &mdash; converted sale</span></span>
+    <span class="chip cxl"><b>CXL</b><span>Cancelled &mdash; guest will not proceed</span></span>
+    <span class="chip lost"><b>LOST</b><span>Lost &mdash; guest declined proposal</span></span>
+    <span class="chip td"><b>TD</b><span>Turned Down &mdash; hotel rejected inquiry</span></span>
+  </section>
+
+  <!-- ================= DASHBOARD ================= -->
+  <section id="dashboard" aria-label="2026 booking dashboard">
+    <div class="kpi-row" id="kpi-row"></div>
+  </section>
+
+  <div class="chart-card">
+    <h3>Pacing vs. budget, by month</h3>
+    <p class="chart-sub">On-the-books revenue booked so far against each month&rsquo;s 2026 budget target. Sourced from the Yearly tab.</p>
+    <div class="chart-legend">
+      <span class="lg-item"><span class="lg-swatch bar"></span> OTB revenue (booked)</span>
+      <span class="lg-item"><span class="lg-tick"></span> Budget target</span>
+    </div>
+    <div class="chart-row" id="chart-row"></div>
+    <div class="chart-months" id="chart-months"></div>
+  </div>
+
+  <div class="chart-card">
+    <h3>Pipeline by status</h3>
+    <p class="chart-sub">All 123 logged Wedding, MICE &amp; Romantic Dining records for 2026, by sales stage.</p>
+    <div class="funnel-row" id="funnel-row"></div>
+  </div>
+
+  <!-- ================= BY VENUE ================= -->
+  <section id="by-venue" aria-label="Bookings by venue">
+    <div class="section-head" style="border-radius:14px 14px 0 0; border:1px solid var(--border-soft); border-bottom:none;">
+      <span class="mark">I.</span>
+      <h2>Bookings by Venue</h2>
+      <span class="tag">23 bookable spaces</span>
+    </div>
+    <div class="section" style="border-radius:0 0 14px 14px; border-top:none;">
+      <div class="section-body">
+        <div class="venue-grid" id="venue-grid"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= ALL BOOKINGS ================= -->
+  <section class="section" id="all-bookings">
+    <div class="section-head">
+      <span class="mark">II.</span>
+      <h2>All Bookings &mdash; 2026</h2>
+      <span class="tag" id="live-indicator"><span class="live-dot" id="live-dot"></span> <span id="live-text">Connecting&hellip;</span></span>
+    </div>
+    <div class="section-body">
+      <div class="table-toolbar">
+        <input type="search" id="bk-search" placeholder="Search event, venue, date&hellip;">
+        <div class="status-filter" id="bk-status-filter"></div>
+        <select id="bk-type-filter">
+          <option value="">All types</option>
+          <option value="Wedding">Wedding</option>
+          <option value="MICE">MICE</option>
+          <option value="Romantic">Romantic Dining</option>
+        </select>
+        <select id="bk-month-filter">
+          <option value="">All months</option>
+        </select>
+      </div>
+      <div class="view-toggle no-print">
+        <button type="button" data-view="table" class="active">Table</button>
+        <button type="button" data-view="calendar">Calendar</button>
+      </div>
+
+      <div id="view-table">
+        <p class="table-count" id="bk-count"></p>
+        <div class="table-scroll">
+          <table class="bookings">
+            <thead>
+              <tr><th>Date</th><th>Event</th><th>Type</th><th>Status</th><th>Pax</th><th>Venue(s)</th><th style="text-align:right;">Revenue (THB)</th></tr>
+            </thead>
+            <tbody id="bk-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="view-calendar" hidden>
+        <div class="cal-toolbar no-print">
+          <button type="button" id="cal-prev" aria-label="Previous month">&lsaquo;</button>
+          <h3 id="cal-month-label">January 2026</h3>
+          <button type="button" id="cal-next" aria-label="Next month">&rsaquo;</button>
+        </div>
+        <div class="cal-legend">
+          <span class="lg-item"><span class="cal-dot wedding"></span> Wedding</span>
+          <span class="lg-item"><span class="cal-dot mice"></span> MICE</span>
+          <span class="lg-item"><span class="cal-dot romantic"></span> Romantic Dining</span>
+        </div>
+        <div class="cal-head" id="cal-head"></div>
+        <div class="cal-grid" id="cal-grid"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= WEDDING ================= -->
+  <section class="section" id="wedding" data-kind="wedding">
+    <div class="section-head">
+      <span class="mark">III.</span>
+      <h2>Wedding Reservation</h2>
+      <span class="tag">Ceremony &middot; Dinner &middot; After Party</span>
+    </div>
+    <div class="section-body">
+
+      <div>
+        <span class="block-label">Booking details</span>
+        <div class="field-grid">
+          <div class="field"><label for="wd-date">Date</label><input type="date" id="wd-date"></div>
+          <div class="field wide"><label for="wd-event-name">Event name</label><input type="text" id="wd-event-name" placeholder="e.g. Ploypailin &amp; Timo&rsquo;s Wedding"></div>
+          <div class="field"><label for="wd-by">By (sales rep)</label><input type="text" id="wd-by" placeholder="name"></div>
+          <div class="field"><label for="wd-pax">Total of guest (pax)</label><input type="number" min="0" id="wd-pax"></div>
+          <div class="field"><label for="wd-cutoff">Cut-off date</label><input type="date" id="wd-cutoff"></div>
+        </div>
+      </div>
+
+      <div>
+        <span class="block-label">Status</span>
+        <div class="status-picker" role="radiogroup" aria-label="Wedding booking status">
+          <label><input type="radio" name="wd-status" value="INQ" checked><span>INQ</span></label>
+          <label><input type="radio" name="wd-status" value="PROS"><span>PROS</span></label>
+          <label><input type="radio" name="wd-status" value="TEN"><span>TEN</span></label>
+          <label><input type="radio" name="wd-status" value="DEF"><span>DEF</span></label>
+          <label><input type="radio" name="wd-status" value="CXL"><span>CXL</span></label>
+          <label><input type="radio" name="wd-status" value="LOST"><span>LOST</span></label>
+          <label><input type="radio" name="wd-status" value="TD"><span>TD</span></label>
+        </div>
+      </div>
+
+      <div>
+        <span class="block-label">Package &amp; venue assignment</span>
+        <div class="field-grid">
+          <div class="field wide">
+            <label for="wd-package">Wedding package</label>
+            <select id="wd-package">
+              <option value="">Select package&hellip;</option>
+              <option>Standard Beach Package (Old PKG)</option>
+              <option>Standard Beach Package (New PKG)</option>
+              <option>Gold Beach Package (Old PKG)</option>
+              <option>Premium Beach Package (New PKG)</option>
+              <option>Platinum Beach Package (Old PKG)</option>
+              <option>Beyond Your Dreams Package (New PKG)</option>
+              <option>Thai Wedding Package (Old PKG)</option>
+              <option>Thai Wedding Package (New PKG)</option>
+              <option>Standard Pier Package (Old PKG)</option>
+              <option>Standard Pier Package (New PKG)</option>
+              <option>Gold Pier Package (Old PKG)</option>
+              <option>Premium Pier Package (New PKG)</option>
+              <option>Indian Ceremony Package (Old PKG)</option>
+              <option>Indian Ceremony Package (New PKG)</option>
+              <option>Mehendi D&eacute;cor Package (Old PKG)</option>
+              <option>Mehendi D&eacute;cor Package (New PKG)</option>
+              <option>Sangeet D&eacute;cor Package (Old PKG)</option>
+              <option>Sangeet D&eacute;cor Package (New PKG)</option>
+              <option>Venue Rental</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="wd-venue-ceremony">Ceremony</label>
+            <select id="wd-venue-ceremony" class="venue-select"><option value="">Select venue&hellip;</option></select>
+          </div>
+          <div class="field">
+            <label for="wd-venue-dinner">Dinner</label>
+            <select id="wd-venue-dinner" class="venue-select"><option value="">Select venue&hellip;</option></select>
+          </div>
+          <div class="field">
+            <label for="wd-venue-afterparty">After party</label>
+            <select id="wd-venue-afterparty" class="venue-select"><option value="">Select venue&hellip;</option></select>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <span class="block-label">Revenue &mdash; On The Books vs. Actual</span>
+        <div class="rev-wrap">
+          <table class="rev" data-group="wd-rev">
+            <caption>Wedding revenue breakdown (THB)</caption>
+            <thead>
+              <tr><th>Component</th><th>OTB Revenue</th><th>Actual Revenue</th><th>Variant</th></tr>
+            </thead>
+            <tbody>
+              <tr data-row="package"><td>WD Package</td><td><input type="number" class="otb" data-k="package" value="0"></td><td><input type="number" class="act" data-k="package" value="0"></td><td class="variant-amt num">&mdash;</td></tr>
+              <tr data-row="food"><td>Food</td><td><input type="number" class="otb" data-k="food" value="0"></td><td><input type="number" class="act" data-k="food" value="0"></td><td class="variant-amt num">&mdash;</td></tr>
+              <tr data-row="beverage"><td>Beverage</td><td><input type="number" class="otb" data-k="beverage" value="0"></td><td><input type="number" class="act" data-k="beverage" value="0"></td><td class="variant-amt num">&mdash;</td></tr>
+              <tr data-row="extra"><td>Extra Service</td><td><input type="number" class="otb" data-k="extra" value="0"></td><td><input type="number" class="act" data-k="extra" value="0"></td><td class="variant-amt num">&mdash;</td></tr>
+              <tr data-row="venuefee"><td>Venue Fee</td><td><input type="number" class="otb" data-k="venuefee" value="0"></td><td><input type="number" class="act" data-k="venuefee" value="0"></td><td class="variant-amt num">&mdash;</td></tr>
+              <tr data-row="other"><td>Other</td><td><input type="number" class="otb" data-k="other" value="0"></td><td><input type="number" class="act" data-k="other" value="0"></td><td class="variant-amt num">&mdash;</td></tr>
+              <tr data-row="roomrev"><td>Room Revenue</td><td><input type="number" class="otb" data-k="roomrev" value="0"></td><td><input type="number" class="act" data-k="roomrev" value="0"></td><td class="variant-amt num">&mdash;</td></tr>
+              <tr data-row="roomnights"><td>Room Nights</td><td><input type="number" class="otb" data-k="roomnights" value="0"></td><td><input type="number" class="act" data-k="roomnights" value="0"></td><td class="variant-amt num">&mdash;</td></tr>
+              <tr class="total" data-row="fb"><td>F&amp;B Revenue</td><td class="otb-out num">0</td><td class="act-out num">0</td><td class="variant-amt num">&mdash;</td></tr>
+              <tr class="total" data-row="totalrev"><td>Total Revenue</td><td class="otb-out num">0</td><td class="act-out num">0</td><td class="variant-amt num">&mdash;</td></tr>
+              <tr class="variant" data-row="pct"><td>Variance vs. OTB</td><td colspan="2"></td><td class="variant-amt num">&mdash;</td></tr>
+            </tbody>
+          </table>
+          <p class="currency-note">Figures in Thai Baht (THB). F&amp;B Revenue and Total Revenue totals as you type; Variant = Actual &minus; OTB.</p>
+        </div>
+      </div>
+
+      <div class="save-bar no-print">
+        <button type="button" class="save-btn" id="wd-save">Save booking &amp; add to dashboard</button>
+        <span class="save-msg" id="wd-save-msg"></span>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= MICE ================= -->
+  <section class="section" id="mice" data-kind="mice">
+    <div class="section-head">
+      <span class="mark">IV.</span>
+      <h2>MICE Reservation</h2>
+      <span class="tag">Meetings &middot; Incentives &middot; Conferences &middot; Events</span>
+    </div>
+    <div class="section-body">
+
+      <div>
+        <span class="block-label">Booking details</span>
+        <div class="field-grid">
+          <div class="field"><label for="mi-date">Date</label><input type="date" id="mi-date"></div>
+          <div class="field wide"><label for="mi-event-name">Event name</label><input type="text" id="mi-event-name" placeholder="e.g. Kulwinder&rsquo;s Anniversary"></div>
+          <div class="field"><label for="mi-pax">Total of guest (pax)</label><input type="number" min="0" id="mi-pax"></div>
+          <div class="field"><label for="mi-cutoff">Cut-off date</label><input type="date" id="mi-cutoff"></div>
+        </div>
+      </div>
+
+      <div>
+        <span class="block-label">Status</span>
+        <div class="status-picker" role="radiogroup" aria-label="MICE booking status">
+          <label><input type="radio" name="mi-status" value="INQ" checked><span>INQ</span></label>
+          <label><input type="radio" name="mi-status" value="PROS"><span>PROS</span></label>
+          <label><input type="radio" name="mi-status" value="TEN"><span>TEN</span></label>
+          <label><input type="radio" name="mi-status" value="DEF"><span>DEF</span></label>
+          <label><input type="radio" name="mi-status" value="CXL"><span>CXL</span></label>
+          <label><input type="radio" name="mi-status" value="LOST"><span>LOST</span></label>
+          <label><input type="radio" name="mi-status" value="TD"><span>TD</span></label>
+        </div>
+      </div>
+
+      <div>
+        <span class="block-label">Package, venues &amp; net price</span>
+        <div class="field-grid">
+          <div class="field"><label for="mi-package">MICE package</label><input type="text" id="mi-package" placeholder="e.g. Day Delegate Package"></div>
+          <div class="field"><label for="mi-netprice">Net price (THB)</label><input type="number" min="0" id="mi-netprice" class="num"></div>
+          <div class="field"><label for="mi-venue1">Venue 1</label><select id="mi-venue1" class="venue-select"><option value="">Select venue&hellip;</option></select></div>
+          <div class="field"><label for="mi-venue2">Venue 2</label><select id="mi-venue2" class="venue-select"><option value="">Select venue&hellip;</option></select></div>
+          <div class="field"><label for="mi-venue3">Venue 3</label><select id="mi-venue3" class="venue-select"><option value="">Select venue&hellip;</option></select></div>
+        </div>
+      </div>
+
+      <div>
+        <span class="block-label">Revenue &mdash; Forecast vs. Actual</span>
+        <div class="rev-wrap">
+          <table class="rev" data-group="mi-rev">
+            <caption>MICE revenue breakdown (THB)</caption>
+            <thead>
+              <tr><th>Component</th><th>Forecast Revenue</th><th>Actual Revenue</th><th>Variant</th></tr>
+            </thead>
+            <tbody>
+              <tr data-row="package"><td>MICE Package</td><td><input type="number" class="otb" data-k="package" value="0"></td><td><input type="number" class="act" data-k="package" value="0"></td><td class="variant-amt num">&mdash;</td></tr>
+              <tr data-row="food"><td>Food</td><td><input type="number" class="otb" data-k="food" value="0"></td><td><input type="number" class="act" data-k="food" value="0"></td><td class="variant-amt num">&mdash;</td></tr>
+              <tr data-row="beverage"><td>Beverage</td><td><input type="number" class="otb" data-k="beverage" value="0"></td><td><input type="number" class="act" data-k="beverage" value="0"></td><td class="variant-amt num">&mdash;</td></tr>
+              <tr data-row="extra"><td>Extra Service</td><td><input type="number" class="otb" data-k="extra" value="0"></td><td><input type="number" class="act" data-k="extra" value="0"></td><td class="variant-amt num">&mdash;</td></tr>
+              <tr data-row="venuefee"><td>Venue Fee</td><td><input type="number" class="otb" data-k="venuefee" value="0"></td><td><input type="number" class="act" data-k="venuefee" value="0"></td><td class="variant-amt num">&mdash;</td></tr>
+              <tr data-row="other"><td>Other</td><td><input type="number" class="otb" data-k="other" value="0"></td><td><input type="number" class="act" data-k="other" value="0"></td><td class="variant-amt num">&mdash;</td></tr>
+              <tr data-row="accommodation"><td>Accommodation</td><td><input type="number" class="otb" data-k="accommodation" value="0"></td><td><input type="number" class="act" data-k="accommodation" value="0"></td><td class="variant-amt num">&mdash;</td></tr>
+              <tr data-row="roomnights"><td>Room Nights</td><td><input type="number" class="otb" data-k="roomnights" value="0"></td><td><input type="number" class="act" data-k="roomnights" value="0"></td><td class="variant-amt num">&mdash;</td></tr>
+              <tr class="total" data-row="fb"><td>F&amp;B Revenue</td><td class="otb-out num">0</td><td class="act-out num">0</td><td class="variant-amt num">&mdash;</td></tr>
+              <tr class="total" data-row="totalrev"><td>Total Revenue</td><td class="otb-out num">0</td><td class="act-out num">0</td><td class="variant-amt num">&mdash;</td></tr>
+              <tr class="variant" data-row="pct"><td>Variance vs. Forecast</td><td colspan="2"></td><td class="variant-amt num">&mdash;</td></tr>
+            </tbody>
+          </table>
+          <p class="currency-note">Figures in Thai Baht (THB). F&amp;B Revenue and Total Revenue totals as you type; Variant = Actual &minus; Forecast.</p>
+        </div>
+      </div>
+
+      <div class="save-bar no-print">
+        <button type="button" class="save-btn" id="mi-save">Save booking &amp; add to dashboard</button>
+        <span class="save-msg" id="mi-save-msg"></span>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="actions no-print">
+    <span>Thavorn Beach Village &amp; Spa &mdash; internal use, Events &amp; Weddings team.</span>
+    <button type="button" id="print-btn">Print / Save as PDF</button>
+  </div>
+
+</div>
+
+<div class="modal-overlay hidden no-print" id="venue-modal" aria-hidden="true">
+  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="venue-modal-title">
+    <div class="modal-header">
+      <div>
+        <h3 id="venue-modal-title">Venue</h3>
+        <div class="modal-sub" id="venue-modal-sub"></div>
+      </div>
+      <button type="button" class="modal-close" id="venue-modal-close" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body" id="venue-modal-body"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+(function(){
+  var VENUES = ["Nakalay Hall","Nakalay A","Nakalay B","AMOR The Nature","AMOR The Hall","AMOR The Pier","AMOR The Sand","Old Siam Courtyard","Beachfront Lawn","Village Club","Crocodile Lawn","Marisa Terrace Restaurant","Thai Sala Cafe","Crocodile Bar & Grill","Romantic Dining","Lobby","Outside","Bridal Gallery","Botanical Gardens","Sandy Beach","Sala","Continue","TBA"];
+
+  document.querySelectorAll('select.venue-select').forEach(function(sel){
+    VENUES.forEach(function(v){
+      var opt = document.createElement('option');
+      opt.textContent = v;
+      sel.appendChild(opt);
+    });
+  });
+
+  function fmt(n){
+    if (!isFinite(n)) return '—';
+    return new Intl.NumberFormat('en-US', {maximumFractionDigits:0}).format(n);
+  }
+
+  function wireTable(table){
+    var rows = {};
+    table.querySelectorAll('tbody tr[data-row]').forEach(function(tr){
+      rows[tr.getAttribute('data-row')] = tr;
+    });
+    var fbKeys = ['food','beverage','extra'];
+    var totalKeys = ['package','food','beverage','extra','venuefee','other'];
+
+    function val(row, cls){
+      var tr = rows[row];
+      if (!tr) return 0;
+      var input = tr.querySelector('input.' + cls);
+      if (!input) return 0;
+      var n = parseFloat(input.value);
+      return isFinite(n) ? n : 0;
+    }
+
+    function sum(keys, cls){
+      return keys.reduce(function(acc,k){ return acc + val(k, cls); }, 0);
+    }
+
+    function recalc(){
+      ['otb','act'].forEach(function(cls){
+        var fb = sum(fbKeys, cls);
+        var tot = sum(totalKeys, cls);
+        var fbCell = rows['fb'] && rows['fb'].querySelector('.' + cls + '-out');
+        var totCell = rows['totalrev'] && rows['totalrev'].querySelector('.' + cls + '-out');
+        if (fbCell) fbCell.textContent = fmt(fb);
+        if (totCell) totCell.textContent = fmt(tot);
+      });
+
+      totalKeys.concat(['roomrev','accommodation','roomnights']).forEach(function(k){
+        var tr = rows[k];
+        if (!tr) return;
+        var o = val(k,'otb'), a = val(k,'act');
+        var cell = tr.querySelector('.variant-amt');
+        if (!cell) return;
+        var diff = a - o;
+        if (o === 0 && a === 0){ cell.textContent = '—'; cell.className='variant-amt num'; return; }
+        cell.textContent = (diff > 0 ? '+' : '') + fmt(diff);
+        cell.className = 'variant-amt num ' + (diff > 0 ? 'pos' : (diff < 0 ? 'neg' : ''));
+      });
+
+      var otbTotal = sum(totalKeys, 'otb');
+      var actTotal = sum(totalKeys, 'act');
+      var totRow = rows['totalrev'];
+      if (totRow){
+        var diff = actTotal - otbTotal;
+        var cell = totRow.querySelector('.variant-amt');
+        if (otbTotal === 0 && actTotal === 0){ cell.textContent = '—'; cell.className='variant-amt num'; }
+        else { cell.textContent = (diff > 0 ? '+' : '') + fmt(diff); cell.className = 'variant-amt num ' + (diff > 0 ? 'pos' : (diff < 0 ? 'neg' : '')); }
+      }
+
+      var pctRow = rows['pct'];
+      if (pctRow){
+        var pctCell = pctRow.querySelector('.variant-amt');
+        if (otbTotal === 0){ pctCell.textContent = '—'; pctCell.className='variant-amt num'; }
+        else {
+          var pct = ((actTotal - otbTotal) / otbTotal) * 100;
+          pctCell.textContent = (pct > 0 ? '+' : '') + pct.toFixed(1) + '%';
+          pctCell.className = 'variant-amt num ' + (pct > 0 ? 'pos' : (pct < 0 ? 'neg' : ''));
+        }
+      }
+    }
+
+    table.addEventListener('input', function(e){
+      if (e.target.matches('input.otb, input.act')) recalc();
+    });
+    recalc();
+  }
+
+  document.querySelectorAll('table.rev').forEach(wireTable);
+
+  var printBtn = document.getElementById('print-btn');
+  if (printBtn) printBtn.addEventListener('click', function(){ window.print(); });
+})();
+</script>
+
+<script>
+(function(){
+  var VENUES = ["Nakalay Hall","Nakalay A","Nakalay B","AMOR The Nature","AMOR The Hall","AMOR The Pier","AMOR The Sand","Old Siam Courtyard","Beachfront Lawn","Village Club","Crocodile Lawn","Marisa Terrace Restaurant","Thai Sala Cafe","Crocodile Bar & Grill","Romantic Dining","Lobby","Outside","Bridal Gallery","Botanical Gardens","Sandy Beach","Sala","Continue","TBA"];
+  var MONTH_NAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  var FALLBACK_BOOKINGS = [{"month":"Jan","date":"3 Jan 26","eventName":"Ploypailin & Timo's Wedding","by":"","section":"Wedding","status":"DEF","pax":"50","cutoff":"","revenue":135089.0,"venues":["Sandy Beach"],"dateSort":"2026-01-03","source":"sheet"},{"month":"Jan","date":"5 Jan 26","eventName":"Bolormaa.G","by":"","section":"Wedding","status":"DEF","pax":"45","cutoff":"","revenue":null,"venues":["AMOR The Pier","AMOR The Nature","Nakalay Hall"],"dateSort":"2026-01-05","source":"sheet"},{"month":"Jan","date":"8 Jan 26","eventName":"Rebecca & Christos's Wedding","by":"","section":"Wedding","status":"DEF","pax":"","cutoff":"","revenue":0.0,"venues":["AMOR The Pier","Beachfront Lawn"],"dateSort":"2026-01-08","source":"sheet"},{"month":"Jan","date":"9 Jan 26","eventName":"Lynne & Yee's Wedding","by":"","section":"Wedding","status":"DEF","pax":"10","cutoff":"","revenue":0.0,"venues":["Sandy Beach"],"dateSort":"2026-01-09","source":"sheet"},{"month":"Jan","date":"17 Jan 26","eventName":"Kavisara & Miller's Wedding","by":"","section":"Wedding","status":"DEF","pax":"40","cutoff":"","revenue":0.0,"venues":["AMOR The Sand","Beachfront Lawn"],"dateSort":"2026-01-17","source":"sheet"},{"month":"Jan","date":"19 Jan 26","eventName":"Maisie & Jamie's Wedding","by":"","section":"Wedding","status":"DEF","pax":"","cutoff":"","revenue":0.0,"venues":["AMOR The Sand","Beachfront Lawn"],"dateSort":"2026-01-19","source":"sheet"},{"month":"Jan","date":"24 Jan 26","eventName":"Marinah & Enoch's Wedding","by":"","section":"Wedding","status":"DEF","pax":"","cutoff":"","revenue":0.0,"venues":["AMOR The Pier","Beachfront Lawn"],"dateSort":"2026-01-24","source":"sheet"},{"month":"Jan","date":"8 Jan 26","eventName":"Kulwinder's Annivesary","by":"","section":"MICE","status":"DEF","pax":"17","cutoff":"","revenue":null,"venues":["AMOR The Sand"],"dateSort":"2026-01-08","source":"sheet"},{"month":"Jan","date":"31 Jan 26","eventName":"Mr Viacheslav","by":"","section":"MICE","status":"TEN","pax":"22","cutoff":"28 Jan 26","revenue":null,"venues":[],"dateSort":"2026-01-31","source":"sheet"},{"month":"Jan","date":"3 Jan 26","eventName":"Starry night","by":"","section":"Romantic","status":"DEF","pax":"2","cutoff":"","revenue":28000.0,"venues":["Sandy Beach"],"dateSort":"2026-01-03","source":"sheet"},{"month":"Jan","date":"7 Jan 26","eventName":"Starry night","by":"","section":"Romantic","status":"DEF","pax":"2","cutoff":"","revenue":22000.0,"venues":["Sandy Beach"],"dateSort":"2026-01-07","source":"sheet"},{"month":"Jan","date":"8 Jan 26","eventName":"Starry night","by":"","section":"Romantic","status":"DEF","pax":"2","cutoff":"","revenue":22000.0,"venues":["Sandy Beach"],"dateSort":"2026-01-08","source":"sheet"},{"month":"Jan","date":"10 Jan 26","eventName":"Starry night","by":"","section":"Romantic","status":"DEF","pax":"2","cutoff":"","revenue":15000.0,"venues":["Sandy Beach"],"dateSort":"2026-01-10","source":"sheet"},{"month":"Jan","date":"15 Jan 26","eventName":"Starry night","by":"","section":"Romantic","status":"DEF","pax":"2","cutoff":"","revenue":23200.0,"venues":["Sandy Beach"],"dateSort":"2026-01-15","source":"sheet"},{"month":"Jan","date":"17 Jan 26","eventName":"Starry night","by":"","section":"Romantic","status":"DEF","pax":"2","cutoff":"","revenue":22000.0,"venues":[],"dateSort":"2026-01-17","source":"sheet"},{"month":"Jan","date":"27 Jan 26","eventName":"Chef's table","by":"","section":"Romantic","status":"DEF","pax":"6","cutoff":"","revenue":52500.0,"venues":["AMOR The Pier"],"dateSort":"2026-01-27","source":"sheet"},{"month":"Feb","date":"1 Feb 26","eventName":"Casey & Joel's Wedding","by":"","section":"Wedding","status":"DEF","pax":"","cutoff":"","revenue":0.0,"venues":["AMOR The Pier"],"dateSort":"2026-02-01","source":"sheet"},{"month":"Feb","date":"2 Feb 26","eventName":"Joanna's Wedding","by":"","section":"Wedding","status":"DEF","pax":"60","cutoff":"","revenue":539422.0,"venues":["AMOR The Pier","AMOR The Nature"],"dateSort":"2026-02-02","source":"sheet"},{"month":"Feb","date":"5 Feb 26","eventName":"Aryan & Vaanya's Wedding","by":"","section":"Wedding","status":"DEF","pax":"80","cutoff":"","revenue":0.0,"venues":["AMOR The Pier","Beachfront Lawn"],"dateSort":"2026-02-05","source":"sheet"},{"month":"Feb","date":"12 Feb 26","eventName":"Allison Dunne's Wedding","by":"","section":"Wedding","status":"DEF","pax":"6","cutoff":"","revenue":262566.0,"venues":["Beachfront Lawn","Sandy Beach"],"dateSort":"2026-02-12","source":"sheet"},{"month":"Feb","date":"15 Feb 26","eventName":"Mina & Ty's Wedding","by":"","section":"Wedding","status":"DEF","pax":"40","cutoff":"","revenue":419584.0,"venues":["AMOR The Sand","AMOR The Nature"],"dateSort":"2026-02-15","source":"sheet"},{"month":"Feb","date":"21 Feb 26","eventName":"Jessica & Eric's Wedding","by":"","section":"Wedding","status":"DEF","pax":"50","cutoff":"","revenue":0.0,"venues":["Sandy Beach","Nakalay Hall"],"dateSort":"2026-02-21","source":"sheet"},{"month":"Feb","date":"25 Feb 26","eventName":"Lauren and Teekas's Wedding","by":"","section":"Wedding","status":"DEF","pax":"50","cutoff":"","revenue":343882.0,"venues":["Sandy Beach","Beachfront Lawn"],"dateSort":"2026-02-25","source":"sheet"},{"month":"Feb","date":"26 Feb 26","eventName":"Helen Smith & Oliver Cowley-Topping's Wedding","by":"","section":"Wedding","status":"DEF","pax":"","cutoff":"","revenue":0.0,"venues":["AMOR The Pier","Beachfront Lawn"],"dateSort":"2026-02-26","source":"sheet"},{"month":"Feb","date":"28 Feb 26","eventName":"Kate's Anniversary","by":"","section":"MICE","status":"DEF","pax":"80-130","cutoff":"","revenue":506983.0,"venues":["AMOR The Pier","AMOR The Nature"],"dateSort":"2026-02-28","source":"sheet"},{"month":"Feb","date":"14 Feb 26","eventName":"Oksana Group","by":"","section":"MICE","status":"DEF","pax":"25","cutoff":"","revenue":134500.0,"venues":["AMOR The Pier","AMOR The Nature"],"dateSort":"2026-02-14","source":"sheet"},{"month":"Feb","date":"18 Feb 26","eventName":"Dhara Gupta's Birthday","by":"","section":"MICE","status":"DEF","pax":"22","cutoff":"","revenue":null,"venues":["AMOR The Pier"],"dateSort":"2026-02-18","source":"sheet"},{"month":"Feb","date":"5 Feb 26","eventName":"Starry night","by":"","section":"Romantic","status":"DEF","pax":"2","cutoff":"","revenue":23200.0,"venues":["Sandy Beach"],"dateSort":"2026-02-05","source":"sheet"},{"month":"Feb","date":"14 Feb 26","eventName":"Valentine's dinner","by":"","section":"Romantic","status":"DEF","pax":"26","cutoff":"Block","revenue":null,"venues":["Sandy Beach"],"dateSort":"2026-02-14","source":"sheet"},{"month":"Feb","date":"23 Feb 26","eventName":"WEIYING FANG","by":"","section":"Romantic","status":"DEF","pax":"2","cutoff":"","revenue":27400.0,"venues":["Sandy Beach"],"dateSort":"2026-02-23","source":"sheet"},{"month":"Mar","date":"6 Mar 26","eventName":"Alexandra & Daniel's Wedding","by":"","section":"Wedding","status":"DEF","pax":"50","cutoff":"","revenue":0.0,"venues":["AMOR The Pier","AMOR The Nature"],"dateSort":"2026-03-06","source":"sheet"},{"month":"Mar","date":"7 Mar 26","eventName":"Heidi & Christopher's Wedding","by":"","section":"Wedding","status":"DEF","pax":"40","cutoff":"","revenue":386066.0,"venues":["AMOR The Pier","AMOR The Nature"],"dateSort":"2026-03-07","source":"sheet"},{"month":"Mar","date":"12 Mar 26","eventName":"Chris & Tamar's Wedding","by":"","section":"Wedding","status":"DEF","pax":"","cutoff":"","revenue":0.0,"venues":["AMOR The Sand","AMOR The Nature"],"dateSort":"2026-03-12","source":"sheet"},{"month":"Mar","date":"21 Mar 26","eventName":"Daphne & Aaron's Wedding","by":"","section":"Wedding","status":"DEF","pax":"40","cutoff":"","revenue":444860.0,"venues":[],"dateSort":"2026-03-21","source":"sheet"},{"month":"Mar","date":"27 Mar 26","eventName":"Kate & Jordi's Wedding","by":"","section":"Wedding","status":"DEF","pax":"200","cutoff":"","revenue":0.0,"venues":["AMOR The Sand","AMOR The Hall"],"dateSort":"2026-03-27","source":"sheet"},{"month":"Mar","date":"30 Mar 26","eventName":"Simona & Nikola's Wedding","by":"","section":"Wedding","status":"DEF","pax":"","cutoff":"","revenue":0.0,"venues":[],"dateSort":"2026-03-30","source":"sheet"},{"month":"Mar","date":"10 Mar 26","eventName":"Travel Bluez","by":"","section":"MICE","status":"DEF","pax":"18","cutoff":"","revenue":null,"venues":["AMOR The Pier"],"dateSort":"2026-03-10","source":"sheet"},{"month":"Mar","date":"11 Mar 26","eventName":"Chef's table","by":"","section":"Romantic","status":"DEF","pax":"4","cutoff":"","revenue":85000.0,"venues":["AMOR The Pier"],"dateSort":"2026-03-11","source":"sheet"},{"month":"Mar","date":"13 Mar 26","eventName":"Chef's table","by":"","section":"Romantic","status":"DEF","pax":"2","cutoff":"","revenue":110400.0,"venues":["AMOR The Pier"],"dateSort":"2026-03-13","source":"sheet"},{"month":"Mar","date":"16 Mar 26","eventName":"Starry night","by":"","section":"Romantic","status":"DEF","pax":"2","cutoff":"","revenue":20900.0,"venues":["Sandy Beach"],"dateSort":"2026-03-16","source":"sheet"},{"month":"Mar","date":"20 Mar 26","eventName":"Starry night","by":"","section":"Romantic","status":"DEF","pax":"2","cutoff":"","revenue":53000.0,"venues":["Sandy Beach"],"dateSort":"2026-03-20","source":"sheet"},{"month":"Apr","date":"2 Apr 26","eventName":"Karina & Jame ( welcome dinner)","by":"","section":"Wedding","status":"DEF","pax":"80","cutoff":"","revenue":0.0,"venues":["Beachfront Lawn"],"dateSort":"2026-04-02","source":"sheet"},{"month":"Apr","date":"3 Apr 26","eventName":"Karina & James's Wedding","by":"","section":"Wedding","status":"DEF","pax":"","cutoff":"","revenue":0.0,"venues":["AMOR The Sand","AMOR The Nature"],"dateSort":"2026-04-03","source":"sheet"},{"month":"Apr","date":"4 Apr 26","eventName":"Hannah & Adam's Wedding","by":"","section":"Wedding","status":"DEF","pax":"","cutoff":"","revenue":0.0,"venues":["Sandy Beach","AMOR The Nature"],"dateSort":"2026-04-04","source":"sheet"},{"month":"Apr","date":"5 Apr 26","eventName":"Bella & Shane's Wedding","by":"","section":"Wedding","status":"DEF","pax":"","cutoff":"","revenue":0.0,"venues":["AMOR The Pier","AMOR The Nature"],"dateSort":"2026-04-05","source":"sheet"},{"month":"Apr","date":"8 Apr 26","eventName":"Shannon & Shaun's Wedding","by":"","section":"Wedding","status":"DEF","pax":"","cutoff":"","revenue":0.0,"venues":["Sandy Beach","Beachfront Lawn"],"dateSort":"2026-04-08","source":"sheet"},{"month":"Apr","date":"8 Apr 26","eventName":"Nicole & Phil's Wedding","by":"","section":"Wedding","status":"DEF","pax":"","cutoff":"","revenue":0.0,"venues":["AMOR The Pier","AMOR The Nature"],"dateSort":"2026-04-08","source":"sheet"},{"month":"Apr","date":"17 Apr 26","eventName":"Megan & Bradley's Wedding","by":"","section":"Wedding","status":"DEF","pax":"","cutoff":"","revenue":0.0,"venues":["Sandy Beach","Beachfront Lawn"],"dateSort":"2026-04-17","source":"sheet"},{"month":"Apr","date":"22 Apr 26","eventName":"Sakshi Singh's Wedding","by":"","section":"Wedding","status":"PROS","pax":"","cutoff":"20-Mar-26","revenue":0.0,"venues":[],"dateSort":"2026-04-22","source":"sheet"},{"month":"Apr","date":"23 Apr 26","eventName":"Halen & Thompson's Wedding","by":"","section":"Wedding","status":"DEF","pax":"2","cutoff":"","revenue":83263.0,"venues":[],"dateSort":"2026-04-23","source":"sheet"},{"month":"Apr","date":"20 Apr 26","eventName":"Vera and Stepan","by":"","section":"MICE","status":"INQ","pax":"25","cutoff":"10 Mar 26","revenue":null,"venues":["AMOR The Pier"],"dateSort":"2026-04-20","source":"sheet"},{"month":"Apr","date":"5 Apr 26","eventName":"Mr.Dominic Magli","by":"","section":"Romantic","status":"PROS","pax":"2","cutoff":"","revenue":29900.0,"venues":["Sandy Beach"],"dateSort":"2026-04-05","source":"sheet"},{"month":"May","date":"23 May 26","eventName":"Hmung & Lily's Wedding","by":"","section":"Wedding","status":"DEF","pax":"40","cutoff":"","revenue":0.0,"venues":["AMOR The Nature","AMOR The Sand"],"dateSort":"2026-05-23","source":"sheet"},{"month":"May","date":"25 May 26","eventName":"MOW l May & Tobin","by":"","section":"Wedding","status":"DEF","pax":"11","cutoff":"","revenue":83263.0,"venues":["Sandy Beach","Beachfront Lawn"],"dateSort":"2026-05-25","source":"sheet"},{"month":"May","date":"17 May 26","eventName":"Thabo Ntuli","by":"","section":"MICE","status":"DEF","pax":"30","cutoff":"","revenue":null,"venues":["AMOR The Pier"],"dateSort":"2026-05-17","source":"sheet"},{"month":"May","date":"20 May 26","eventName":"Berjaya Sompo Insurance","by":"","section":"MICE","status":"DEF","pax":"120","cutoff":"","revenue":null,"venues":["AMOR The Nature"],"dateSort":"2026-05-20","source":"sheet"},{"month":"May","date":"22 May 26","eventName":"PSH Travel","by":"","section":"MICE","status":"DEF","pax":"28","cutoff":"","revenue":null,"venues":["Nakalay Hall"],"dateSort":"2026-05-22","source":"sheet"},{"month":"Jun","date":"2 Jun 26","eventName":"Raina & Morgann's Wedding","by":"Pick","section":"Wedding","status":"DEF","pax":"120","cutoff":"","revenue":0.0,"venues":[],"dateSort":"2026-06-02","source":"sheet"},{"month":"Jun","date":"19 Jun 26","eventName":"Jenny & Chris's Wedding","by":"Fon","section":"Wedding","status":"DEF","pax":"30","cutoff":"","revenue":135089.0,"venues":["Sandy Beach","AMOR The Sand"],"dateSort":"2026-06-19","source":"sheet"},{"month":"Jun","date":"20 Jun 26","eventName":"Magic Green Flowers l Eugenia & Nikita's  Wedding","by":"Sally","section":"Wedding","status":"DEF","pax":"32","cutoff":"","revenue":0.0,"venues":["AMOR The Pier","AMOR The Hall"],"dateSort":"2026-06-20","source":"sheet"},{"month":"Jun","date":"26 Jun 26","eventName":"Charalampos & Nha Yen Huynh's Wedding","by":"Pick","section":"Wedding","status":"DEF","pax":"16","cutoff":"","revenue":0.0,"venues":[],"dateSort":"2026-06-26","source":"sheet"},{"month":"Jun","date":"17 Jun 26","eventName":"Luxury Hideaway","by":"","section":"MICE","status":"DEF","pax":"48","cutoff":"","revenue":0.0,"venues":["AMOR The Sand"],"dateSort":"2026-06-17","source":"sheet"},{"month":"Jun","date":"18 Jun 26","eventName":"Luxury Hideaway","by":"","section":"MICE","status":"DEF","pax":"48","cutoff":"","revenue":null,"venues":["Village Club"],"dateSort":"2026-06-18","source":"sheet"},{"month":"Jun","date":"19 Jun 26","eventName":"Luxury Hideaway","by":"","section":"MICE","status":"DEF","pax":"48","cutoff":"","revenue":null,"venues":["Village Club"],"dateSort":"2026-06-19","source":"sheet"},{"month":"Jul","date":"6 Jul 26","eventName":"Amie Kelly's Wedding","by":"Sally","section":"Wedding","status":"DEF","pax":"2","cutoff":"","revenue":null,"venues":[],"dateSort":"2026-07-06","source":"sheet"},{"month":"Jul","date":"7 Jul 26","eventName":"Lilith & Jared's Wedding","by":"","section":"Wedding","status":"DEF","pax":"40","cutoff":"","revenue":655533.0,"venues":["Sandy Beach","Beachfront Lawn"],"dateSort":"2026-07-07","source":"sheet"},{"month":"Jul","date":"8 Jul 26","eventName":"Stephen & Jazz's Wedding","by":"","section":"Wedding","status":"DEF","pax":"80","cutoff":"","revenue":0.0,"venues":["AMOR The Sand","AMOR The Nature"],"dateSort":"2026-07-08","source":"sheet"},{"month":"Jul","date":"10 Jul 26","eventName":"Michelle & Gary's Wedding","by":"Pick","section":"Wedding","status":"DEF","pax":"","cutoff":"","revenue":0.0,"venues":[],"dateSort":"2026-07-10","source":"sheet"},{"month":"Jul","date":"15 Jul 26","eventName":"bisola yusuf","by":"","section":"MICE","status":"DEF","pax":"20","cutoff":"","revenue":0.0,"venues":["Sandy Beach"],"dateSort":"2026-07-15","source":"sheet"},{"month":"Jul","date":"16 Jul 26","eventName":"Ved's first birthday","by":"","section":"MICE","status":"DEF","pax":"100","cutoff":"","revenue":0.0,"venues":["AMOR The Nature","AMOR The Pier"],"dateSort":"2026-07-16","source":"sheet"},{"month":"Jul","date":"17 Jul 26","eventName":"Ved's first birthday","by":"","section":"MICE","status":"DEF","pax":"100","cutoff":"","revenue":0.0,"venues":["AMOR The Nature","AMOR The Pier"],"dateSort":"2026-07-17","source":"sheet"},{"month":"Jul","date":"18 Jul 26","eventName":"Ved's first birthday","by":"","section":"MICE","status":"DEF","pax":"100","cutoff":"","revenue":null,"venues":["AMOR The Nature","AMOR The Pier"],"dateSort":"2026-07-18","source":"sheet"},{"month":"Jul","date":"11 Jul 26","eventName":"Ocean vow.","by":"","section":"MICE","status":"DEF","pax":"2","cutoff":"","revenue":71920.0,"venues":["AMOR The Pier"],"dateSort":"2026-07-11","source":"sheet"},{"month":"Aug","date":"20 Aug 26","eventName":"Rebecca & Daniel's Wedding","by":"Sally","section":"Wedding","status":"INQ","pax":"6","cutoff":"","revenue":null,"venues":[],"dateSort":"2026-08-20","source":"sheet"},{"month":"Aug","date":"23 Aug 26","eventName":"Desiree & Rozarna's Wedding","by":"Sally","section":"Wedding","status":"DEF","pax":"2","cutoff":"","revenue":83263.0,"venues":["Sandy Beach"],"dateSort":"2026-08-23","source":"sheet"},{"month":"Aug","date":"9 Aug 26","eventName":"Annual Women's Conference","by":"","section":"MICE","status":"DEF","pax":"200","cutoff":"","revenue":null,"venues":["AMOR The Nature"],"dateSort":"2026-08-09","source":"sheet"},{"month":"Aug","date":"15 Aug 26","eventName":"EGL Group","by":"","section":"MICE","status":"DEF","pax":"25","cutoff":"","revenue":null,"venues":["Beachfront Lawn"],"dateSort":"2026-08-15","source":"sheet"},{"month":"Aug","date":"17 Aug 26","eventName":"Void Interactive","by":"","section":"MICE","status":"DEF","pax":"9","cutoff":"","revenue":null,"venues":["Nakalay Hall"],"dateSort":"2026-08-17","source":"sheet"},{"month":"Aug","date":"18 Aug 26","eventName":"Void Interactive","by":"","section":"MICE","status":"DEF","pax":"30","cutoff":"","revenue":null,"venues":["Nakalay Hall"],"dateSort":"2026-08-18","source":"sheet"},{"month":"Aug","date":"19 Aug 26","eventName":"Void Interactive","by":"","section":"MICE","status":"DEF","pax":"30","cutoff":"","revenue":null,"venues":["Nakalay Hall"],"dateSort":"2026-08-19","source":"sheet"},{"month":"Sep","date":"9 Sep 26","eventName":"Monica & Johnny's Wedding","by":"Pick","section":"Wedding","status":"DEF","pax":"","cutoff":"","revenue":0.0,"venues":[],"dateSort":"2026-09-09","source":"sheet"},{"month":"Sep","date":"1 Sep 26","eventName":"Ashna Birthday","by":"","section":"MICE","status":"DEF","pax":"30","cutoff":"","revenue":null,"venues":["AMOR The Sand"],"dateSort":"2026-09-01","source":"sheet"},{"month":"Sep","date":"13 Sep 26","eventName":"RPB Consulting","by":"","section":"MICE","status":"DEF","pax":"30","cutoff":"","revenue":0.0,"venues":["AMOR The Nature","AMOR The Sand"],"dateSort":"2026-09-13","source":"sheet"},{"month":"Sep","date":"24 Sep 26","eventName":"Eagle Crest DMC","by":"","section":"MICE","status":"INQ","pax":"160","cutoff":"18 Aug 26","revenue":null,"venues":[],"dateSort":"2026-09-24","source":"sheet"},{"month":"Sep","date":"27 Sep 26","eventName":"Eagle Crest DMC","by":"","section":"MICE","status":"INQ","pax":"160","cutoff":"18 Aug 26","revenue":0.0,"venues":[],"dateSort":"2026-09-27","source":"sheet"},{"month":"Oct","date":"7 Oct 26","eventName":"Micheal Wedding Group","by":"","section":"Wedding","status":"INQ","pax":"56","cutoff":"18-Mar-26","revenue":0.0,"venues":[],"dateSort":"2026-10-07","source":"sheet"},{"month":"Oct","date":"24 Oct 26","eventName":"Bethany & Joshua","by":"Sally","section":"Wedding","status":"DEF","pax":"19","cutoff":"","revenue":0.0,"venues":["AMOR The Sand","AMOR The Nature"],"dateSort":"2026-10-24","source":"sheet"},{"month":"Oct","date":"29 Oct 26","eventName":"Samburaj's Wedding","by":"Pick","section":"Wedding","status":"DEF","pax":"","cutoff":"","revenue":0.0,"venues":[],"dateSort":"2026-10-29","source":"sheet"},{"month":"Oct","date":"30 Oct 26","eventName":"Royal Vacation -  Isabella's Wedding","by":"Sally","section":"Wedding","status":"INQ","pax":"13","cutoff":"","revenue":null,"venues":[],"dateSort":"2026-10-30","source":"sheet"},{"month":"Oct","date":"31 Oct 26","eventName":"Easy Wedding l Stacey Lamble","by":"","section":"Wedding","status":"DEF","pax":"40","cutoff":"","revenue":314764.0,"venues":["Beachfront Lawn","Sandy Beach"],"dateSort":"2026-10-31","source":"sheet"},{"month":"Oct","date":"16 Oct 26","eventName":"Shunkhlai Group","by":"","section":"MICE","status":"INQ","pax":"150","cutoff":"","revenue":0.0,"venues":[],"dateSort":"2026-10-16","source":"sheet"},{"month":"Oct","date":"27 Oct 26","eventName":"Gulzar's  Birthday","by":"","section":"MICE","status":"DEF","pax":"","cutoff":"","revenue":null,"venues":[],"dateSort":"2026-10-27","source":"sheet"},{"month":"Oct","date":"30 Oct 26","eventName":"Sangetha Chelladorai's birthday","by":"","section":"MICE","status":"INQ","pax":"26","cutoff":"","revenue":0.0,"venues":[],"dateSort":"2026-10-30","source":"sheet"},{"month":"Nov","date":"1 Nov 26","eventName":"PhuketWeds l Nigel & Wendy's  Vow Renewal","by":"Sally","section":"Wedding","status":"DEF","pax":"14","cutoff":"","revenue":0.0,"venues":["AMOR The Pier"],"dateSort":"2026-11-01","source":"sheet"},{"month":"Nov","date":"4 Nov 26","eventName":"Aya & Latoya's Wedding","by":"","section":"Wedding","status":"INQ","pax":"2","cutoff":"26-Jan-26","revenue":83263.0,"venues":[],"dateSort":"2026-11-04","source":"sheet"},{"month":"Nov","date":"6 Nov 26","eventName":"Ashley & Drew's Wedding","by":"Pick","section":"Wedding","status":"DEF","pax":"44","cutoff":"","revenue":0.0,"venues":["AMOR The Pier","AMOR The Nature"],"dateSort":"2026-11-06","source":"sheet"},{"month":"Nov","date":"8 Nov 26","eventName":"Sarah & Alan's Wedding","by":"Pick","section":"Wedding","status":"DEF","pax":"","cutoff":"","revenue":0.0,"venues":[],"dateSort":"2026-11-08","source":"sheet"},{"month":"Nov","date":"11 Nov 26","eventName":"Samantha & Joseph's Wedding","by":"","section":"Wedding","status":"DEF","pax":"30","cutoff":"","revenue":386449.0,"venues":["AMOR The Pier","AMOR The Hall"],"dateSort":"2026-11-11","source":"sheet"},{"month":"Nov","date":"15 Nov 26","eventName":"Rebeka & Mark's Wedding","by":"","section":"Wedding","status":"DEF","pax":"2","cutoff":"","revenue":0.0,"venues":["Sandy Beach"],"dateSort":"2026-11-15","source":"sheet"},{"month":"Nov","date":"16 Nov 26","eventName":"Nicole & Kai's Wedding","by":"Pick","section":"Wedding","status":"DEF","pax":"50","cutoff":"","revenue":346856.0,"venues":["Sandy Beach","Village Club"],"dateSort":"2026-11-16","source":"sheet"},{"month":"Nov","date":"19 Nov 26","eventName":"Taylor & Omer","by":"","section":"Wedding","status":"DEF","pax":"12","cutoff":"","revenue":0.0,"venues":["Beachfront Lawn","AMOR The Nature"],"dateSort":"2026-11-19","source":"sheet"},{"month":"Nov","date":"21 Nov 26","eventName":"Joanne & Say's Wedding","by":"","section":"Wedding","status":"DEF","pax":"","cutoff":"","revenue":0.0,"venues":["Sandy Beach","Beachfront Lawn","Nakalay Hall"],"dateSort":"2026-11-21","source":"sheet"},{"month":"Nov","date":"23 Nov 26","eventName":"Donna & Roxanne","by":"","section":"Wedding","status":"DEF","pax":"30","cutoff":"","revenue":0.0,"venues":["AMOR The Sand","Village Club"],"dateSort":"2026-11-23","source":"sheet"},{"month":"Nov","date":"26 Nov 26","eventName":"Lisa & Fiancé","by":"Sally","section":"Wedding","status":"INQ","pax":"2","cutoff":"","revenue":0.0,"venues":[],"dateSort":"2026-11-26","source":"sheet"},{"month":"Nov","date":"28 Nov 26","eventName":"Luca & Donato's Wedding","by":"","section":"Wedding","status":"DEF","pax":"4","cutoff":"","revenue":0.0,"venues":["Sandy Beach","Continue"],"dateSort":"2026-11-28","source":"sheet"},{"month":"Nov","date":"29 Nov 26","eventName":"Annemiek's Wedding","by":"Pick","section":"Wedding","status":"DEF","pax":"","cutoff":"","revenue":0.0,"venues":[],"dateSort":"2026-11-29","source":"sheet"},{"month":"Nov","date":"29 Nov 26","eventName":"Richard & Fiance's Wedding","by":"","section":"Wedding","status":"TEN","pax":"20","cutoff":"","revenue":0.0,"venues":[],"dateSort":"2026-11-29","source":"sheet"},{"month":"Dec","date":"1 Dec 26","eventName":"Tatyana's Wedding","by":"Sally","section":"Wedding","status":"DEF","pax":"20","cutoff":"","revenue":null,"venues":[],"dateSort":"2026-12-01","source":"sheet"},{"month":"Dec","date":"5 Dec 26","eventName":"Lena & Benjamin's Wedding","by":"","section":"Wedding","status":"DEF","pax":"","cutoff":"","revenue":0.0,"venues":["Sandy Beach","Beachfront Lawn"],"dateSort":"2026-12-05","source":"sheet"},{"month":"Dec","date":"6 Dec 26","eventName":"Book Your Dream Wedding l  Reka and Laszio's Wedding","by":"Sally","section":"Wedding","status":"DEF","pax":"2","cutoff":"","revenue":0.0,"venues":["Sandy Beach"],"dateSort":"2026-12-06","source":"sheet"},{"month":"Dec","date":"7 Dec 26","eventName":"Binuka & Tony's Wedding","by":"Sally","section":"Wedding","status":"DEF","pax":"30","cutoff":"","revenue":null,"venues":["AMOR The Pier","AMOR The Nature"],"dateSort":"2026-12-07","source":"sheet"},{"month":"Dec","date":"12 Dec 26","eventName":"Elina & Andrew's Wedding","by":"Sally","section":"Wedding","status":"DEF","pax":"27","cutoff":"","revenue":223646.0,"venues":["AMOR The Pier","AMOR The Nature"],"dateSort":"2026-12-12","source":"sheet"},{"month":"Dec","date":"14 Dec 26","eventName":"Demid & Lea's Wedding","by":"","section":"Wedding","status":"DEF","pax":"35","cutoff":"","revenue":0.0,"venues":[],"dateSort":"2026-12-14","source":"sheet"},{"month":"Dec","date":"16 Dec 26","eventName":"Jessie & Shuk Yi Chan's Wedding","by":"Sally","section":"Wedding","status":"DEF","pax":"26","cutoff":"","revenue":0.0,"venues":[],"dateSort":"2026-12-16","source":"sheet"},{"month":"Dec","date":"17 Dec 26","eventName":"Sylvia & Felix's Wedding","by":"Sally","section":"Wedding","status":"DEF","pax":"20","cutoff":"","revenue":null,"venues":["AMOR The Sand","AMOR The Nature"],"dateSort":"2026-12-17","source":"sheet"},{"month":"Dec","date":"18 Dec 26","eventName":"Jamie & Maryam's Wedding","by":"","section":"Wedding","status":"DEF","pax":"50","cutoff":"","revenue":0.0,"venues":["AMOR The Pier","Beachfront Lawn"],"dateSort":"2026-12-18","source":"sheet"},{"month":"Dec","date":"19 Dec 26","eventName":"Thanakan & Chaiwat's Wedding","by":"","section":"Wedding","status":"DEF","pax":"60","cutoff":"","revenue":0.0,"venues":["AMOR The Sand","AMOR The Nature"],"dateSort":"2026-12-19","source":"sheet"},{"month":"Dec","date":"26 Dec 26","eventName":"Miki & Anson's Wedding","by":"","section":"Wedding","status":"DEF","pax":"40","cutoff":"","revenue":0.0,"venues":[],"dateSort":"2026-12-26","source":"sheet"},{"month":"Dec","date":"27 Dec 26","eventName":"Eunice Garcia's Wedding","by":"Fon","section":"Wedding","status":"INQ","pax":"30","cutoff":"4-Sep-26","revenue":null,"venues":["AMOR The Nature","AMOR The Sand"],"dateSort":"2026-12-27","source":"sheet"},{"month":"Dec","date":"27 Dec 26","eventName":"Sarah's Wedding","by":"","section":"Wedding","status":"INQ","pax":"","cutoff":"","revenue":0.0,"venues":[],"dateSort":"2026-12-27","source":"sheet"},{"month":"Dec","date":"1 Dec 26","eventName":"Starry night","by":"","section":"Romantic","status":"PROS","pax":"2","cutoff":"","revenue":28800.0,"venues":["Sandy Beach"],"dateSort":"2026-12-01","source":"sheet"},{"month":"Dec","date":"4 Dec 26","eventName":"Dinner","by":"","section":"Romantic","status":"INQ","pax":"14","cutoff":"","revenue":null,"venues":["Sandy Beach"],"dateSort":"2026-12-04","source":"sheet"},{"month":"Dec","date":"21 Dec 26","eventName":"Chef'sTable","by":"","section":"Romantic","status":"DEF","pax":"4","cutoff":"","revenue":105700.0,"venues":["AMOR The Pier"],"dateSort":"2026-12-21","source":"sheet"}];
+  var MONTHLY = [{"month":"January","budget":1593733.0,"ly":706326.0,"forecast":155353.0,"otbTotalRev":135089.0,"otbFB":135089.0,"noWedding":7.0,"pax":145.0,"otbVsBudget":-1458644.0,"otbVsLY":-571237.0,"otbVsForecast":-20263.0,"grossRev":159000.0,"actualGrossRev":0.0,"variantAmount":-135089.0,"variantPct":"#DIV/0!"},{"month":"February","budget":2553750.0,"ly":2213500.0,"forecast":1233333.0,"otbTotalRev":1565454.0,"otbFB":1072464.0,"noWedding":8.0,"pax":286.0,"otbVsBudget":-1481286.0,"otbVsLY":-1141037.0,"otbVsForecast":-160870.0,"grossRev":1847469.0,"actualGrossRev":0.0,"variantAmount":-1565454.0,"variantPct":"42.00%"},{"month":"March","budget":1796091.0,"ly":932676.0,"forecast":955565.0,"otbTotalRev":830926.0,"otbFB":830926.0,"noWedding":6.0,"pax":330.0,"otbVsBudget":-965165.0,"otbVsLY":-101750.0,"otbVsForecast":-124639.0,"grossRev":978000.0,"actualGrossRev":0.0,"variantAmount":-830926.0,"variantPct":"46.26%"},{"month":"April","budget":2575400.0,"ly":749941.0,"forecast":95752.0,"otbTotalRev":83263.0,"otbFB":83263.0,"noWedding":8.0,"pax":82.0,"otbVsBudget":-2492137.0,"otbVsLY":-666678.0,"otbVsForecast":-12489.0,"grossRev":98000.0,"actualGrossRev":0.0,"variantAmount":-83263.0,"variantPct":"3.23%"},{"month":"May","budget":1367013.0,"ly":41037.0,"forecast":47192.0,"otbTotalRev":83263.0,"otbFB":83263.0,"noWedding":2.0,"pax":51.0,"otbVsBudget":-1283750.0,"otbVsLY":42226.0,"otbVsForecast":36071.0,"grossRev":98000.0,"actualGrossRev":0.0,"variantAmount":-83263.0,"variantPct":"6.09%"},{"month":"June","budget":790400.0,"ly":870229.0,"forecast":1000763.0,"otbTotalRev":135089.0,"otbFB":135089.0,"noWedding":4.0,"pax":198.0,"otbVsBudget":-655311.0,"otbVsLY":-735140.0,"otbVsForecast":-865674.0,"grossRev":159000.0,"actualGrossRev":0.0,"variantAmount":-135089.0,"variantPct":"17.09%"},{"month":"July","budget":805200.0,"ly":244261.0,"forecast":280900.0,"otbTotalRev":655533.0,"otbFB":407477.0,"noWedding":3.0,"pax":120.0,"otbVsBudget":-397723.0,"otbVsLY":163216.0,"otbVsForecast":126577.0,"grossRev":774043.0,"actualGrossRev":0.0,"variantAmount":-655533.0,"variantPct":"50.61%"},{"month":"August","budget":1338000.0,"ly":0.0,"forecast":0.0,"otbTotalRev":83263.0,"otbFB":83263.0,"noWedding":1.0,"pax":2.0,"otbVsBudget":-1254737.0,"otbVsLY":83263.0,"otbVsForecast":83263.0,"grossRev":98000.0,"actualGrossRev":0.0,"variantAmount":-83263.0,"variantPct":"6.22%"},{"month":"September","budget":1488000.0,"ly":639316.0,"forecast":735213.0,"otbTotalRev":0.0,"otbFB":0.0,"noWedding":1.0,"pax":0.0,"otbVsBudget":-1488000.0,"otbVsLY":-639316.0,"otbVsForecast":-735213.0,"grossRev":0.0,"actualGrossRev":0.0,"variantAmount":0.0,"variantPct":"0.00%"},{"month":"October","budget":1742000.0,"ly":1132523.0,"forecast":1302402.0,"otbTotalRev":314764.0,"otbFB":314764.0,"noWedding":2.0,"pax":75.0,"otbVsBudget":-1427236.0,"otbVsLY":-817759.0,"otbVsForecast":-987638.0,"grossRev":0.0,"actualGrossRev":0.0,"variantAmount":0.0,"variantPct":"18.07%"},{"month":"November","budget":3657000.0,"ly":3706750.0,"forecast":4205550.0,"otbTotalRev":733305.0,"otbFB":733305.0,"noWedding":11.0,"pax":190.0,"otbVsBudget":-2923695.0,"otbVsLY":-2973445.0,"otbVsForecast":-3472245.0,"grossRev":863100.0,"actualGrossRev":0.0,"variantAmount":-733305.0,"variantPct":"20.05%"},{"month":"December","budget":3065000.0,"ly":1918589.0,"forecast":3524750.0,"otbTotalRev":223646.0,"otbFB":223646.0,"noWedding":11.0,"pax":320.0,"otbVsBudget":-2841354.0,"otbVsLY":-1694943.0,"otbVsForecast":-3301104.0,"grossRev":402231.0,"actualGrossRev":0.0,"variantAmount":-341743.0,"variantPct":"7.30%"}];
+  var YEAR = {budget:22771587,ly:13155148,forecast:13536774,otbTotalRev:4843595,otbFB:4102548,noWedding:64,pax:1799,otbVsBudget:-18669039,otbVsForecast:-9434226,grossRev:5476844};
+
+  var BOOKINGS = FALLBACK_BOOKINGS.slice();
+  var SUPABASE_URL = 'https://drnnjvqobaufnamowpcw.supabase.co';
+  var SUPABASE_ANON_KEY = 'sb_publishable_FI7ZzY6kxApRITA5s2FTOg_flY4xSst';
+  var supabaseClient = (window.supabase && typeof window.supabase.createClient === 'function')
+    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    : null;
+  var calMonthIndex = 0;
+  (function(){
+    var t = new Date();
+    calMonthIndex = (t.getFullYear() === 2026) ? t.getMonth() : 0;
+  })();
+
+  function escapeHtml(s){
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  function fmtTHB(n){
+    if (n === null || n === undefined || !isFinite(n)) return '\u2014';
+    return '\u0e3f' + new Intl.NumberFormat('en-US', {maximumFractionDigits:0}).format(n);
+  }
+  function fmtCompact(n){
+    if (n === null || n === undefined || !isFinite(n)) return '\u2014';
+    if (Math.abs(n) >= 1000000) return (n/1000000).toFixed(1)+'M';
+    if (Math.abs(n) >= 1000) return Math.round(n/1000)+'K';
+    return String(Math.round(n));
+  }
+  function rowToBooking(r){
+    return {
+      id: r.id, month: r.month, date: r.date, eventName: r.event_name,
+      by: r.by || '', section: r.section, status: r.status,
+      pax: r.pax || '', cutoff: r.cutoff || '', revenue: r.revenue,
+      venues: r.venues || [], dateSort: r.date_sort, source: r.source || 'sheet',
+      package: r.package || ''
+    };
+  }
+
+  function setLive(status, label){
+    var dot = document.getElementById('live-dot');
+    var text = document.getElementById('live-text');
+    if (!dot || !text) return;
+    if (status === 'live'){ dot.classList.add('on'); text.textContent = label || 'Live \u2014 syncing across viewers'; }
+    else { dot.classList.remove('on'); text.textContent = label || 'Offline snapshot'; }
+  }
+
+  /* ================= KPI TILES ================= */
+  function renderKPIs(){
+    var kpiRow = document.getElementById('kpi-row');
+    if (!kpiRow) return;
+    kpiRow.innerHTML = '';
+    var totalBookings = BOOKINGS.length;
+    var pctOfBudget = YEAR.budget ? (YEAR.otbTotalRev / YEAR.budget * 100) : 0;
+    var wedCount = BOOKINGS.filter(function(b){return b.section==='Wedding';}).length;
+    var miceCount = BOOKINGS.filter(function(b){return b.section==='MICE';}).length;
+    var romCount = BOOKINGS.filter(function(b){return b.section==='Romantic';}).length;
+    var kpis = [
+      {label:'Logged bookings', value:String(totalBookings), sub: wedCount+' wedding \u00b7 '+miceCount+' MICE \u00b7 '+romCount+' dining'},
+      {label:'Confirmed weddings (sheet)', value:String(YEAR.noWedding), sub: YEAR.pax.toLocaleString('en-US')+' guests total'},
+      {label:'OTB revenue booked', value:fmtTHB(YEAR.otbTotalRev), sub: pctOfBudget.toFixed(1)+'% of 2026 budget'},
+      {label:'2026 budget target', value:fmtTHB(YEAR.budget), sub: fmtTHB(YEAR.otbVsBudget)+' to go', cls:'neg'},
+      {label:'Forecast revenue', value:fmtTHB(YEAR.forecast), sub: fmtTHB(YEAR.grossRev)+' gross rev. on the books'}
+    ];
+    kpis.forEach(function(k){
+      var el = document.createElement('div');
+      el.className = 'kpi-tile';
+      el.innerHTML = '<span class="kpi-label">'+k.label+'</span><span class="kpi-value">'+k.value+'</span><span class="kpi-sub'+(k.cls?' '+k.cls:'')+'">'+k.sub+'</span>';
+      kpiRow.appendChild(el);
+    });
+  }
+
+  /* ================= MONTHLY PACING CHART (static reference data) ================= */
+  var chartTooltip = null;
+  function renderChart(){
+    var chartRow = document.getElementById('chart-row');
+    var chartMonths = document.getElementById('chart-months');
+    if (!chartRow || !chartMonths) return;
+    chartRow.innerHTML = '';
+    chartMonths.innerHTML = '';
+    if (!chartTooltip){
+      chartTooltip = document.createElement('div');
+      chartTooltip.className = 'chart-tooltip';
+      document.body.appendChild(chartTooltip);
+    }
+    var maxScale = 0;
+    MONTHLY.forEach(function(m){ maxScale = Math.max(maxScale, m.budget||0, m.otbTotalRev||0); });
+    MONTHLY.forEach(function(m){
+      var col = document.createElement('div');
+      col.className = 'bar-col';
+      var barH = maxScale ? (m.otbTotalRev / maxScale * 100) : 0;
+      var tickH = maxScale ? (m.budget / maxScale * 100) : 0;
+      var bar = document.createElement('div');
+      bar.className = 'bar';
+      bar.style.height = Math.max(barH,1) + '%';
+      var val = document.createElement('span');
+      val.className = 'bar-value';
+      val.textContent = fmtCompact(m.otbTotalRev);
+      bar.appendChild(val);
+      var tick = document.createElement('div');
+      tick.className = 'bar-tick';
+      tick.style.bottom = Math.min(tickH,100) + '%';
+      col.appendChild(bar);
+      col.appendChild(tick);
+      col.addEventListener('mousemove', function(e){
+        chartTooltip.innerHTML = '<b>'+m.month+'</b><br>OTB: '+fmtTHB(m.otbTotalRev)+'<br>Budget: '+fmtTHB(m.budget)+'<br>Forecast: '+fmtTHB(m.forecast)+'<br>Weddings: '+(m.noWedding||0)+' \u00b7 '+(m.pax||0)+' pax';
+        chartTooltip.style.left = (e.clientX + 14) + 'px';
+        chartTooltip.style.top = (e.clientY + 14) + 'px';
+        chartTooltip.classList.add('show');
+      });
+      col.addEventListener('mouseleave', function(){ chartTooltip.classList.remove('show'); });
+      chartRow.appendChild(col);
+      var lab = document.createElement('span');
+      lab.textContent = m.month.slice(0,3);
+      chartMonths.appendChild(lab);
+    });
+  }
+
+  /* ================= STATUS FUNNEL ================= */
+  function renderFunnel(){
+    var funnelRow = document.getElementById('funnel-row');
+    if (!funnelRow) return;
+    funnelRow.innerHTML = '';
+    var STATUS_ORDER = [['INQ','inq','New Inquiry'],['PROS','pros','Prospect'],['TEN','ten','Tentative'],['DEF','def','Definite'],['CXL','cxl','Cancelled'],['LOST','lost','Lost'],['TD','td','Turned Down']];
+    STATUS_ORDER.forEach(function(s){
+      var count = BOOKINGS.filter(function(b){ return b.status === s[0]; }).length;
+      var el = document.createElement('div');
+      el.className = 'funnel-tile ' + s[1];
+      el.innerHTML = '<span class="fn-count">'+count+'</span><span class="fn-label">'+s[0]+' &middot; '+s[2]+'</span>';
+      funnelRow.appendChild(el);
+    });
+  }
+
+  /* ================= VENUE DIRECTORY ================= */
+  function renderVenues(){
+    var venueGrid = document.getElementById('venue-grid');
+    if (!venueGrid) return;
+    venueGrid.innerHTML = '';
+    var venueCounts = VENUES.map(function(v){
+      var events = BOOKINGS.filter(function(b){ return (b.venues||[]).indexOf(v) !== -1; })
+        .slice().sort(function(a,b){ return (a.dateSort||'').localeCompare(b.dateSort||''); });
+      return {venue:v, events:events};
+    }).sort(function(a,b){ return b.events.length - a.events.length; });
+
+    venueCounts.forEach(function(vc){
+      var card = document.createElement('div');
+      card.className = 'venue-card' + (vc.events.length === 0 ? ' empty' : '');
+      var head = '<div class="venue-card-head"><h4>'+escapeHtml(vc.venue)+'</h4><span class="venue-count">'+vc.events.length+'</span></div>';
+      var body;
+      if (vc.events.length === 0){
+        body = '<p class="venue-empty-note">No bookings logged yet.</p>';
+      } else {
+        body = '<div class="venue-events">' + vc.events.slice(0,8).map(function(e){
+          return '<div class="venue-event"><span class="status-dot '+e.status.toLowerCase()+'"></span><span class="ve-date">'+e.date+'</span><span class="ve-name">'+escapeHtml(e.eventName)+'</span>'+(e.source==='form'?'<span class="tag-new">NEW</span>':'')+'</div>';
+        }).join('') + '</div>' + (vc.events.length > 8 ? '<button type="button" class="venue-more-btn" data-venue="'+escapeHtml(vc.venue)+'">+ '+(vc.events.length-8)+' more &mdash; view all</button>' : '');
+      }
+      card.innerHTML = head + body;
+      if (vc.events.length > 0){
+        card.querySelector('.venue-card-head').style.cursor = 'pointer';
+        card.querySelector('.venue-card-head').addEventListener('click', function(){ openVenueModal(vc.venue); });
+      }
+      var moreBtn = card.querySelector('.venue-more-btn');
+      if (moreBtn) moreBtn.addEventListener('click', function(ev){ ev.stopPropagation(); openVenueModal(vc.venue); });
+      venueGrid.appendChild(card);
+    });
+  }
+
+  /* ================= VENUE DETAIL MODAL ================= */
+  function openVenueModal(venueName){
+    var overlay = document.getElementById('venue-modal');
+    var title = document.getElementById('venue-modal-title');
+    var sub = document.getElementById('venue-modal-sub');
+    var body = document.getElementById('venue-modal-body');
+    if (!overlay) return;
+    var events = BOOKINGS.filter(function(b){ return (b.venues||[]).indexOf(venueName) !== -1; })
+      .slice().sort(function(a,b){ return (a.dateSort||'').localeCompare(b.dateSort||''); });
+
+    title.textContent = venueName;
+    sub.textContent = events.length + (events.length === 1 ? ' booking' : ' bookings') + ' logged for this venue';
+
+    if (events.length === 0){
+      body.innerHTML = '<p class="venue-empty-note">No bookings logged yet.</p>';
+    } else {
+      body.innerHTML = events.map(function(e){
+        var venuesOther = (e.venues||[]).filter(function(v){ return v !== venueName; });
+        return '<div class="modal-event-row">' +
+          '<span class="status-dot '+e.status.toLowerCase()+'"></span>' +
+          '<span class="me-date">'+e.date+'</span>' +
+          '<span class="me-name">'+escapeHtml(e.eventName)+(e.source==='form'?'<span class="tag-new">NEW</span>':'')+'</span>' +
+          '<span class="tag-type '+e.section.toLowerCase()+'">'+e.section+'</span>' +
+          '<span class="me-meta">' +
+            '<span>'+e.status+'</span>' +
+            '<span>&middot; '+(e.pax ? e.pax+' pax' : 'pax n/a')+'</span>' +
+            (e.by ? '<span>&middot; by '+escapeHtml(e.by)+'</span>' : '') +
+            '<span>&middot; '+(e.revenue ? fmtTHB(e.revenue) : 'revenue n/a')+'</span>' +
+            (venuesOther.length ? '<span>&middot; also: '+escapeHtml(venuesOther.join(', '))+'</span>' : '') +
+          '</span>' +
+        '</div>';
+      }).join('');
+    }
+
+    overlay.classList.remove('hidden');
+    overlay.setAttribute('aria-hidden', 'false');
+  }
+
+  function closeVenueModal(){
+    var overlay = document.getElementById('venue-modal');
+    if (!overlay) return;
+    overlay.classList.add('hidden');
+    overlay.setAttribute('aria-hidden', 'true');
+  }
+
+  function wireVenueModal(){
+    var overlay = document.getElementById('venue-modal');
+    if (!overlay) return;
+    document.getElementById('venue-modal-close').addEventListener('click', closeVenueModal);
+    overlay.addEventListener('click', function(ev){
+      if (ev.target === overlay) closeVenueModal();
+    });
+    document.addEventListener('keydown', function(ev){
+      if (ev.key === 'Escape' && !overlay.classList.contains('hidden')) closeVenueModal();
+    });
+  }
+
+  /* ================= FILTER STATE (shared by table & calendar) ================= */
+  var activeStatus = '';
+
+  function filteredBookings(includeMonthFilter){
+    var searchInput = document.getElementById('bk-search');
+    var typeFilter = document.getElementById('bk-type-filter');
+    var monthFilter = document.getElementById('bk-month-filter');
+    var q = searchInput ? searchInput.value.trim().toLowerCase() : '';
+    var type = typeFilter ? typeFilter.value : '';
+    var mo = (includeMonthFilter && monthFilter) ? monthFilter.value : '';
+    return BOOKINGS.filter(function(b){
+      if (activeStatus && b.status !== activeStatus) return false;
+      if (type && b.section !== type) return false;
+      if (mo && b.month !== mo) return false;
+      if (q){
+        var hay = (b.eventName+' '+(b.venues||[]).join(' ')+' '+b.date).toLowerCase();
+        if (hay.indexOf(q) === -1) return false;
+      }
+      return true;
+    }).slice().sort(function(a,b){ return (a.dateSort||'').localeCompare(b.dateSort||''); });
+  }
+
+  /* ================= TABLE VIEW ================= */
+  function renderTable(){
+    var tbody = document.getElementById('bk-tbody');
+    var countLabel = document.getElementById('bk-count');
+    if (!tbody) return;
+    var rows = filteredBookings(true);
+    tbody.innerHTML = '';
+    rows.forEach(function(b){
+      var tr = document.createElement('tr');
+      tr.innerHTML = '<td class="num">'+b.date+'</td>' +
+        '<td>'+escapeHtml(b.eventName)+(b.source==='form'?'<span class="tag-new">NEW</span>':'')+(b.by ? '<br><span class="venues-cell">by '+escapeHtml(b.by)+'</span>' : '')+'</td>' +
+        '<td><span class="tag-type '+b.section.toLowerCase()+'">'+b.section+'</span></td>' +
+        '<td><span class="status-dot '+b.status.toLowerCase()+'"></span>'+b.status+'</td>' +
+        '<td class="num">'+(b.pax || '\u2014')+'</td>' +
+        '<td class="venues-cell">'+((b.venues&&b.venues.length) ? escapeHtml(b.venues.join(', ')) : '<em>TBA</em>')+'</td>' +
+        '<td class="num">'+(b.revenue ? fmtTHB(b.revenue) : '\u2014')+'</td>';
+      tbody.appendChild(tr);
+    });
+    if (countLabel) countLabel.textContent = 'Showing ' + rows.length + ' of ' + BOOKINGS.length + ' bookings';
+  }
+
+  /* ================= CALENDAR VIEW ================= */
+  function renderCalendarHead(){
+    var head = document.getElementById('cal-head');
+    if (!head || head.children.length) return;
+    ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(function(d){
+      var s = document.createElement('span');
+      s.textContent = d;
+      head.appendChild(s);
+    });
+  }
+  function renderCalendar(){
+    var grid = document.getElementById('cal-grid');
+    var label = document.getElementById('cal-month-label');
+    if (!grid || !label) return;
+    renderCalendarHead();
+    var year = 2026;
+    label.textContent = new Date(year, calMonthIndex, 1).toLocaleDateString('en-US', {month:'long', year:'numeric'});
+    grid.innerHTML = '';
+    var monKey = MONTH_NAMES[calMonthIndex];
+    var rows = filteredBookings(false).filter(function(b){ return b.month === monKey; });
+    var byDay = {};
+    rows.forEach(function(b){
+      var day = parseInt((b.dateSort||'').split('-')[2], 10);
+      if (!day) return;
+      (byDay[day] = byDay[day] || []).push(b);
+    });
+    var firstDow = new Date(year, calMonthIndex, 1).getDay();
+    var daysInMonth = new Date(year, calMonthIndex + 1, 0).getDate();
+    var today = new Date();
+    var isCurrentMonth = today.getFullYear() === year && today.getMonth() === calMonthIndex;
+    var totalCells = Math.ceil((firstDow + daysInMonth) / 7) * 7;
+    for (var i = 0; i < totalCells; i++){
+      var dayNum = i - firstDow + 1;
+      var cell = document.createElement('div');
+      if (dayNum < 1 || dayNum > daysInMonth){
+        cell.className = 'cal-cell blank';
+        grid.appendChild(cell);
+        continue;
+      }
+      cell.className = 'cal-cell' + (isCurrentMonth && dayNum === today.getDate() ? ' today' : '');
+      var dn = document.createElement('div');
+      dn.className = 'cal-daynum';
+      dn.textContent = String(dayNum);
+      cell.appendChild(dn);
+      var evWrap = document.createElement('div');
+      evWrap.className = 'cal-events';
+      (byDay[dayNum] || []).forEach(function(b){
+        var ev = document.createElement('div');
+        ev.className = 'cal-event';
+        ev.title = b.eventName + ' \u2014 ' + b.section + ' \u2014 ' + b.status + (b.venues&&b.venues.length ? ' \u2014 '+b.venues.join(', ') : '');
+        ev.innerHTML = '<span class="cal-event-dot status-dot '+b.status.toLowerCase()+'"></span>'+escapeHtml(b.eventName);
+        evWrap.appendChild(ev);
+      });
+      cell.appendChild(evWrap);
+      grid.appendChild(cell);
+    }
+    if (rows.length === 0){
+      var note = document.createElement('p');
+      note.className = 'cal-empty-month';
+      note.style.gridColumn = '1 / -1';
+      note.textContent = 'No bookings match the current filters in ' + label.textContent + '.';
+    }
+  }
+
+  function renderAll(){
+    renderKPIs();
+    renderFunnel();
+    renderVenues();
+    renderTable();
+    renderCalendar();
+  }
+
+  /* ================= TOOLBAR WIRING ================= */
+  document.addEventListener('DOMContentLoaded', function(){
+    var searchInput = document.getElementById('bk-search');
+    var typeFilter = document.getElementById('bk-type-filter');
+    var monthFilter = document.getElementById('bk-month-filter');
+    var statusFilterWrap = document.getElementById('bk-status-filter');
+
+    var monthsSeen = MONTH_NAMES.slice();
+    monthsSeen.forEach(function(mo){
+      var opt = document.createElement('option');
+      opt.value = mo; opt.textContent = mo;
+      monthFilter.appendChild(opt);
+    });
+
+    ['All','INQ','PROS','TEN','DEF'].forEach(function(s){
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = s;
+      if (s === 'All') btn.classList.add('active');
+      btn.addEventListener('click', function(){
+        activeStatus = (s === 'All') ? '' : s;
+        Array.prototype.forEach.call(statusFilterWrap.children, function(b){ b.classList.remove('active'); });
+        btn.classList.add('active');
+        renderTable(); renderCalendar();
+      });
+      statusFilterWrap.appendChild(btn);
+    });
+
+    searchInput.addEventListener('input', function(){ renderTable(); renderCalendar(); });
+    typeFilter.addEventListener('change', function(){ renderTable(); renderCalendar(); });
+    monthFilter.addEventListener('change', function(){ renderTable(); });
+
+    var viewToggle = document.querySelectorAll('.view-toggle button');
+    viewToggle.forEach(function(btn){
+      btn.addEventListener('click', function(){
+        viewToggle.forEach(function(b){ b.classList.remove('active'); });
+        btn.classList.add('active');
+        var view = btn.getAttribute('data-view');
+        document.getElementById('view-table').hidden = (view !== 'table');
+        document.getElementById('view-calendar').hidden = (view !== 'calendar');
+        if (view === 'calendar') renderCalendar();
+      });
+    });
+
+    document.getElementById('cal-prev').addEventListener('click', function(){
+      calMonthIndex = (calMonthIndex + 11) % 12;
+      renderCalendar();
+    });
+    document.getElementById('cal-next').addEventListener('click', function(){
+      calMonthIndex = (calMonthIndex + 1) % 12;
+      renderCalendar();
+    });
+
+    wireVenueModal();
+    renderAll();
+    initDb();
+    wireSaveButtons();
+  });
+
+  /* ================= LIVE DB (Supabase) ================= */
+  var realtimeChannel = null;
+  function initDb(){
+    setLive('offline', 'Loading live data\u2026');
+    if (!supabaseClient){
+      setLive('offline', 'Offline snapshot (last saved)');
+      return;
+    }
+    fetchBookings();
+    realtimeChannel = supabaseClient
+      .channel('bookings-changes')
+      .on('postgres_changes', {event:'*', schema:'public', table:'bookings'}, function(){ fetchBookings(); })
+      .subscribe(function(status){
+        if (status === 'SUBSCRIBED'){ setLive('live'); }
+        else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED'){
+          setLive('offline', 'Sync interrupted \u2014 showing last saved snapshot');
+        }
+      });
+  }
+
+  function fetchBookings(){
+    supabaseClient.from('bookings').select('*').order('date_sort', {ascending:true}).limit(1000).then(function(res){
+      if (res.error){
+        setLive('offline', 'Sync interrupted \u2014 showing last saved snapshot');
+        return;
+      }
+      var live = (res.data || []).map(rowToBooking);
+      if (live.length > 0){ BOOKINGS = live; }
+      setLive('live');
+      renderAll();
+    });
+  }
+
+  /* ================= SAVE (INSERT NEW BOOKING) ================= */
+  function fieldVal(id){ var el = document.getElementById(id); return el ? el.value : ''; }
+  function setFieldVal(id, v){ var el = document.getElementById(id); if (el) el.value = v; }
+  function resetRevTable(selector){
+    document.querySelectorAll(selector + ' input.otb, ' + selector + ' input.act').forEach(function(inp){
+      inp.value = '0';
+      inp.dispatchEvent(new Event('input', {bubbles:true}));
+    });
+  }
+  function tableTotal(selector){
+    var cell = document.querySelector(selector + ' tr[data-row="totalrev"] .otb-out');
+    if (!cell) return null;
+    var n = parseFloat(cell.textContent.replace(/,/g,''));
+    return isFinite(n) ? n : null;
+  }
+  function dateParts(iso){
+    if (!iso) return null;
+    var d = new Date(iso + 'T00:00:00');
+    if (isNaN(d.getTime())) return null;
+    return { month: MONTH_NAMES[d.getMonth()], disp: d.getDate()+' '+MONTH_NAMES[d.getMonth()]+' '+String(d.getFullYear()).slice(2), sort: iso };
+  }
+
+  function wireSaveButtons(){
+    var wdBtn = document.getElementById('wd-save');
+    var miBtn = document.getElementById('mi-save');
+    if (wdBtn) wdBtn.addEventListener('click', function(){ saveBooking('wedding', wdBtn, document.getElementById('wd-save-msg')); });
+    if (miBtn) miBtn.addEventListener('click', function(){ saveBooking('mice', miBtn, document.getElementById('mi-save-msg')); });
+  }
+
+  function saveBooking(kind, btn, msgEl){
+    msgEl.textContent = '';
+    msgEl.className = 'save-msg';
+    var data;
+    if (kind === 'wedding'){
+      var dp = dateParts(fieldVal('wd-date'));
+      var name = fieldVal('wd-event-name').trim();
+      if (!dp || !name){
+        msgEl.textContent = 'Please fill in the date and event name first.';
+        msgEl.className = 'save-msg err';
+        return;
+      }
+      var statusEl = document.querySelector('input[name="wd-status"]:checked');
+      var venues = ['wd-venue-ceremony','wd-venue-dinner','wd-venue-afterparty'].map(fieldVal).filter(Boolean);
+      data = {
+        month: dp.month, date: dp.disp, dateSort: dp.sort,
+        eventName: name, by: fieldVal('wd-by').trim(),
+        section: 'Wedding', status: statusEl ? statusEl.value : 'INQ',
+        pax: fieldVal('wd-pax'), cutoff: fieldVal('wd-cutoff'),
+        revenue: tableTotal('table[data-group="wd-rev"]'),
+        venues: venues, package: fieldVal('wd-package'),
+        source: 'form', createdAt: new Date().toISOString()
+      };
+    } else {
+      var dp2 = dateParts(fieldVal('mi-date'));
+      var name2 = fieldVal('mi-event-name').trim();
+      if (!dp2 || !name2){
+        msgEl.textContent = 'Please fill in the date and event name first.';
+        msgEl.className = 'save-msg err';
+        return;
+      }
+      var statusEl2 = document.querySelector('input[name="mi-status"]:checked');
+      var venues2 = ['mi-venue1','mi-venue2','mi-venue3'].map(fieldVal).filter(Boolean);
+      data = {
+        month: dp2.month, date: dp2.disp, dateSort: dp2.sort,
+        eventName: name2, by: '',
+        section: 'MICE', status: statusEl2 ? statusEl2.value : 'INQ',
+        pax: fieldVal('mi-pax'), cutoff: fieldVal('mi-cutoff'),
+        revenue: tableTotal('table[data-group="mi-rev"]'),
+        venues: venues2, package: fieldVal('mi-package'),
+        source: 'form', createdAt: new Date().toISOString()
+      };
+    }
+
+    if (!supabaseClient){
+      msgEl.textContent = 'Live sync isn\u2019t available in this view, so this entry can\u2019t be saved right now.';
+      msgEl.className = 'save-msg err';
+      return;
+    }
+
+    var row = {
+      id: (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ('local-' + Date.now() + '-' + Math.random().toString(16).slice(2)),
+      month: data.month, date: data.date, event_name: data.eventName, by: data.by,
+      section: data.section, status: data.status, pax: data.pax, cutoff: data.cutoff,
+      revenue: data.revenue, venues: data.venues, date_sort: data.dateSort,
+      source: data.source, package: data.package
+    };
+
+    btn.disabled = true;
+    msgEl.textContent = 'Saving\u2026';
+    supabaseClient.from('bookings').insert(row).then(function(res){
+      if (res.error){
+        msgEl.textContent = 'Couldn\u2019t save that booking \u2014 please try again.';
+        msgEl.className = 'save-msg err';
+        btn.disabled = false;
+        return;
+      }
+      msgEl.textContent = 'Saved \u2014 now showing on the dashboard for everyone.';
+      msgEl.className = 'save-msg ok';
+      btn.disabled = false;
+      fetchBookings();
+      if (kind === 'wedding'){
+        setFieldVal('wd-date',''); setFieldVal('wd-event-name',''); setFieldVal('wd-by','');
+        setFieldVal('wd-pax',''); setFieldVal('wd-cutoff',''); setFieldVal('wd-package','');
+        setFieldVal('wd-venue-ceremony',''); setFieldVal('wd-venue-dinner',''); setFieldVal('wd-venue-afterparty','');
+        var inqWd = document.querySelector('input[name="wd-status"][value="INQ"]'); if (inqWd) inqWd.checked = true;
+        resetRevTable('table[data-group="wd-rev"]');
+      } else {
+        setFieldVal('mi-date',''); setFieldVal('mi-event-name',''); setFieldVal('mi-pax','');
+        setFieldVal('mi-cutoff',''); setFieldVal('mi-package',''); setFieldVal('mi-netprice','');
+        setFieldVal('mi-venue1',''); setFieldVal('mi-venue2',''); setFieldVal('mi-venue3','');
+        var inqMi = document.querySelector('input[name="mi-status"][value="INQ"]'); if (inqMi) inqMi.checked = true;
+        resetRevTable('table[data-group="mi-rev"]');
+      }
+    });
+  }
+
+})();
+</script>
+</body>
+</html>
