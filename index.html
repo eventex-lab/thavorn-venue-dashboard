@@ -753,6 +753,8 @@
     background:var(--surface-alt); color:var(--ink);
   }
   .cal-event .cal-event-dot{width:6px; height:6px; border-radius:50%; flex:0 0 auto;}
+  .cal-event-editable{cursor:pointer;}
+  .cal-event-editable:hover{background:var(--accent-soft); outline:1px solid var(--accent);}
   .cal-empty-month{padding:2rem; text-align:center; color:var(--ink-faint); font-size:.85rem;}
 
   @media (max-width:640px){
@@ -1959,9 +1961,13 @@
       evWrap.className = 'cal-events';
       (byDay[dayNum] || []).forEach(function(b){
         var ev = document.createElement('div');
-        ev.className = 'cal-event';
-        ev.title = b.eventName + ' \u2014 ' + b.section + ' \u2014 ' + b.status + (b.venues&&b.venues.length ? ' \u2014 '+b.venues.join(', ') : '');
+        var canEdit = !!(supabaseClient && b.id);
+        ev.className = 'cal-event' + (canEdit ? ' cal-event-editable' : '');
+        ev.title = b.eventName + ' \u2014 ' + b.section + ' \u2014 ' + b.status + (b.venues&&b.venues.length ? ' \u2014 '+b.venues.join(', ') : '') + (canEdit ? ' \u2014 click to edit' : '');
         ev.innerHTML = '<span class="cal-event-dot status-dot '+b.status.toLowerCase()+'"></span>'+escapeHtml(b.eventName);
+        if (canEdit){
+          ev.addEventListener('click', function(ev2){ ev2.stopPropagation(); openEditModal(b); });
+        }
         evWrap.appendChild(ev);
       });
       cell.appendChild(evWrap);
