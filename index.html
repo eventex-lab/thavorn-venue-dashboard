@@ -809,6 +809,36 @@
   }
   .tag-new{background:var(--def-bg); color:var(--def-fg); font-size:.62rem; font-weight:700; letter-spacing:.03em; padding:.05rem .4rem; border-radius:100px; margin-left:.4rem; vertical-align:middle;}
 
+  /* ---------- Row actions (edit/delete) ---------- */
+  table.bookings td.row-actions{white-space:nowrap;}
+  .row-btn{
+    font:inherit; font-size:.72rem; font-weight:600;
+    border:1px solid var(--border); background:var(--surface);
+    color:var(--ink-soft); border-radius:7px; padding:.35rem .6rem;
+    cursor:pointer; margin-right:.35rem;
+  }
+  .row-btn:hover{border-color:var(--accent); color:var(--accent);}
+  .row-btn.row-del:hover{border-color:var(--lost-fg); color:var(--lost-fg);}
+  .row-btn:last-child{margin-right:0;}
+
+  .danger-btn{
+    font:inherit; font-size:.85rem; font-weight:700;
+    color:var(--lost-fg); background:var(--lost-bg); border:1px solid transparent; border-radius:8px;
+    padding:.7rem 1.2rem; cursor:pointer;
+  }
+  .danger-btn:hover{border-color:var(--lost-fg);}
+  .danger-btn:disabled{opacity:.5; cursor:default;}
+
+  .venue-checks{display:flex; flex-wrap:wrap; gap:.5rem;}
+  .venue-checks label{
+    display:inline-flex; align-items:center; gap:.4rem;
+    padding:.4rem .75rem; border-radius:100px; border:1px solid var(--border);
+    font-size:.82rem; font-weight:500; color:var(--ink-soft); cursor:pointer;
+  }
+  .venue-checks input{accent-color:var(--accent); margin:0;}
+  .venue-checks input:checked + span{color:var(--ink); font-weight:700;}
+  .venue-checks label:has(input:checked){border-color:var(--accent); background:var(--accent-soft);}
+
   @media print{
     body{padding:0; background:#fff;}
     .no-print{display:none !important;}
@@ -940,7 +970,7 @@
         <div class="table-scroll">
           <table class="bookings">
             <thead>
-              <tr><th>Date</th><th>Event</th><th>Type</th><th>Status</th><th>Pax</th><th>Venue(s)</th><th style="text-align:right;">Revenue (THB)</th></tr>
+              <tr><th>Date</th><th>Event</th><th>Type</th><th>Status</th><th>Pax</th><th>Venue(s)</th><th style="text-align:right;">Revenue (THB)</th><th class="no-print">Actions</th></tr>
             </thead>
             <tbody id="bk-tbody"></tbody>
           </table>
@@ -1241,6 +1271,52 @@
       <button type="button" class="modal-close" id="venue-modal-close" aria-label="Close">&times;</button>
     </div>
     <div class="modal-body" id="venue-modal-body"></div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden no-print" id="edit-modal" aria-hidden="true">
+  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="edit-modal-title">
+    <div class="modal-header">
+      <div>
+        <h3 id="edit-modal-title">Edit booking</h3>
+        <div class="modal-sub" id="edit-modal-sub"></div>
+      </div>
+      <button type="button" class="modal-close" id="edit-modal-close" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="field-grid">
+        <div class="field"><label for="em-date">Date</label><input type="date" id="em-date"></div>
+        <div class="field wide"><label for="em-event-name">Event name</label><input type="text" id="em-event-name"></div>
+        <div class="field"><label for="em-by">By (sales rep)</label><input type="text" id="em-by"></div>
+        <div class="field"><label for="em-pax">Total of guest (pax)</label><input type="text" id="em-pax"></div>
+        <div class="field"><label for="em-cutoff">Cut-off date</label><input type="text" id="em-cutoff" placeholder="e.g. 20-Mar-26 or Block"></div>
+        <div class="field"><label for="em-revenue">Revenue &mdash; OTB total (THB)</label><input type="number" id="em-revenue"></div>
+      </div>
+
+      <div style="margin-top:1rem;">
+        <span class="block-label">Status</span>
+        <div class="status-picker" role="radiogroup" aria-label="Edit booking status">
+          <label><input type="radio" name="em-status" value="INQ"><span>INQ</span></label>
+          <label><input type="radio" name="em-status" value="PROS"><span>PROS</span></label>
+          <label><input type="radio" name="em-status" value="TEN"><span>TEN</span></label>
+          <label><input type="radio" name="em-status" value="DEF"><span>DEF</span></label>
+          <label><input type="radio" name="em-status" value="CXL"><span>CXL</span></label>
+          <label><input type="radio" name="em-status" value="LOST"><span>LOST</span></label>
+          <label><input type="radio" name="em-status" value="TD"><span>TD</span></label>
+        </div>
+      </div>
+
+      <div style="margin-top:1rem;">
+        <span class="block-label">Venue(s)</span>
+        <div class="venue-checks" id="em-venue-checks"></div>
+      </div>
+
+      <div class="save-bar no-print" style="margin-top:1.2rem; flex-wrap:wrap;">
+        <button type="button" class="save-btn" id="em-save">Save changes</button>
+        <button type="button" class="danger-btn" id="em-delete">Delete booking</button>
+        <span class="save-msg" id="em-save-msg"></span>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1626,6 +1702,164 @@
     });
   }
 
+  /* ================= EDIT / DELETE BOOKING MODAL ================= */
+  var editingId = null;
+
+  function buildVenueChecks(selectedVenues){
+    var wrap = document.getElementById('em-venue-checks');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    var sel = selectedVenues || [];
+    VENUES.forEach(function(v){
+      var label = document.createElement('label');
+      var cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.value = v;
+      if (sel.indexOf(v) !== -1) cb.checked = true;
+      var span = document.createElement('span');
+      span.textContent = v;
+      label.appendChild(cb);
+      label.appendChild(span);
+      wrap.appendChild(label);
+    });
+  }
+
+  function openEditModal(b){
+    if (!b) return;
+    editingId = b.id;
+    var msgEl = document.getElementById('em-save-msg');
+    if (msgEl){ msgEl.textContent = ''; msgEl.className = 'save-msg'; }
+    document.getElementById('edit-modal-sub').textContent = b.section + ' · ' + b.date;
+    setFieldVal('em-date', b.dateSort || '');
+    setFieldVal('em-event-name', b.eventName || '');
+    setFieldVal('em-by', b.by || '');
+    setFieldVal('em-pax', b.pax || '');
+    setFieldVal('em-cutoff', b.cutoff || '');
+    setFieldVal('em-revenue', (b.revenue === null || b.revenue === undefined) ? '' : b.revenue);
+    var statusRadios = document.querySelectorAll('input[name="em-status"]');
+    statusRadios.forEach(function(r){ r.checked = (r.value === b.status); });
+    buildVenueChecks(b.venues || []);
+    var saveBtn = document.getElementById('em-save');
+    var delBtn = document.getElementById('em-delete');
+    if (saveBtn) saveBtn.disabled = false;
+    if (delBtn) delBtn.disabled = false;
+    var overlay = document.getElementById('edit-modal');
+    overlay.classList.remove('hidden');
+    overlay.setAttribute('aria-hidden', 'false');
+  }
+
+  function closeEditModal(){
+    var overlay = document.getElementById('edit-modal');
+    if (!overlay) return;
+    overlay.classList.add('hidden');
+    overlay.setAttribute('aria-hidden', 'true');
+    editingId = null;
+  }
+
+  function wireEditModal(){
+    var overlay = document.getElementById('edit-modal');
+    if (!overlay) return;
+    document.getElementById('edit-modal-close').addEventListener('click', closeEditModal);
+    overlay.addEventListener('click', function(ev){
+      if (ev.target === overlay) closeEditModal();
+    });
+    document.addEventListener('keydown', function(ev){
+      if (ev.key === 'Escape' && !overlay.classList.contains('hidden')) closeEditModal();
+    });
+
+    var tbody = document.getElementById('bk-tbody');
+    if (tbody){
+      tbody.addEventListener('click', function(ev){
+        var editBtn = ev.target.closest ? ev.target.closest('.row-edit') : null;
+        var delBtn = ev.target.closest ? ev.target.closest('.row-del') : null;
+        if (editBtn){
+          var id = editBtn.getAttribute('data-id');
+          var booking = BOOKINGS.filter(function(x){ return String(x.id) === id; })[0];
+          openEditModal(booking);
+        } else if (delBtn){
+          var delId = delBtn.getAttribute('data-id');
+          var delBooking = BOOKINGS.filter(function(x){ return String(x.id) === delId; })[0];
+          if (delBooking) quickDeleteBooking(delBooking);
+        }
+      });
+    }
+
+    var saveBtn = document.getElementById('em-save');
+    var delBtn = document.getElementById('em-delete');
+    var msgEl = document.getElementById('em-save-msg');
+
+    if (saveBtn) saveBtn.addEventListener('click', function(){
+      if (!editingId || !supabaseClient) return;
+      var dp = dateParts(fieldVal('em-date'));
+      var name = fieldVal('em-event-name').trim();
+      if (!dp || !name){
+        msgEl.textContent = 'Please fill in the date and event name first.';
+        msgEl.className = 'save-msg err';
+        return;
+      }
+      var statusEl = document.querySelector('input[name="em-status"]:checked');
+      var venues = Array.prototype.slice.call(document.querySelectorAll('#em-venue-checks input:checked')).map(function(cb){ return cb.value; });
+      var revRaw = fieldVal('em-revenue');
+      var revenue = revRaw === '' ? null : parseFloat(revRaw);
+      var row = {
+        month: dp.month, date: dp.disp, date_sort: dp.sort,
+        event_name: name, by: fieldVal('em-by').trim(),
+        status: statusEl ? statusEl.value : 'INQ',
+        pax: fieldVal('em-pax'), cutoff: fieldVal('em-cutoff'),
+        revenue: (revenue === null || isFinite(revenue)) ? revenue : null,
+        venues: venues
+      };
+      saveBtn.disabled = true;
+      delBtn.disabled = true;
+      msgEl.textContent = 'Saving…';
+      msgEl.className = 'save-msg';
+      supabaseClient.from('bookings').update(row).eq('id', editingId).then(function(res){
+        saveBtn.disabled = false;
+        delBtn.disabled = false;
+        if (res.error){
+          msgEl.textContent = 'Couldn’t save those changes — please try again.';
+          msgEl.className = 'save-msg err';
+          return;
+        }
+        msgEl.textContent = 'Saved.';
+        msgEl.className = 'save-msg ok';
+        fetchBookings();
+        setTimeout(closeEditModal, 500);
+      });
+    });
+
+    if (delBtn) delBtn.addEventListener('click', function(){
+      if (!editingId || !supabaseClient) return;
+      var booking = BOOKINGS.filter(function(x){ return String(x.id) === String(editingId); })[0];
+      var label = booking ? (booking.eventName + ' — ' + booking.date) : 'this booking';
+      if (!window.confirm('Delete "' + label + '"? This can’t be undone.')) return;
+      saveBtn.disabled = true;
+      delBtn.disabled = true;
+      msgEl.textContent = 'Deleting…';
+      msgEl.className = 'save-msg';
+      supabaseClient.from('bookings').delete().eq('id', editingId).then(function(res){
+        saveBtn.disabled = false;
+        delBtn.disabled = false;
+        if (res.error){
+          msgEl.textContent = 'Couldn’t delete that booking — please try again.';
+          msgEl.className = 'save-msg err';
+          return;
+        }
+        fetchBookings();
+        closeEditModal();
+      });
+    });
+  }
+
+  function quickDeleteBooking(b){
+    if (!supabaseClient || !b || !b.id) return;
+    if (!window.confirm('Delete "' + b.eventName + ' — ' + b.date + '"? This can’t be undone.')) return;
+    supabaseClient.from('bookings').delete().eq('id', b.id).then(function(res){
+      if (res.error){ window.alert('Couldn’t delete that booking — please try again.'); return; }
+      fetchBookings();
+    });
+  }
+
   /* ================= FILTER STATE (shared by table & calendar) ================= */
   var activeStatus = '';
 
@@ -1657,13 +1891,18 @@
     tbody.innerHTML = '';
     rows.forEach(function(b){
       var tr = document.createElement('tr');
+      var canEdit = !!(supabaseClient && b.id);
+      var actionsCell = canEdit
+        ? '<td class="row-actions no-print"><button type="button" class="row-btn row-edit" data-id="'+escapeHtml(b.id)+'">Edit</button><button type="button" class="row-btn row-del" data-id="'+escapeHtml(b.id)+'">Delete</button></td>'
+        : '<td class="row-actions no-print"><span class="venues-cell">&mdash;</span></td>';
       tr.innerHTML = '<td class="num">'+b.date+'</td>' +
         '<td>'+escapeHtml(b.eventName)+(b.source==='form'?'<span class="tag-new">NEW</span>':'')+(b.by ? '<br><span class="venues-cell">by '+escapeHtml(b.by)+'</span>' : '')+'</td>' +
         '<td><span class="tag-type '+b.section.toLowerCase()+'">'+b.section+'</span></td>' +
         '<td><span class="status-dot '+b.status.toLowerCase()+'"></span>'+b.status+'</td>' +
         '<td class="num">'+(b.pax || '\u2014')+'</td>' +
         '<td class="venues-cell">'+((b.venues&&b.venues.length) ? escapeHtml(b.venues.join(', ')) : '<em>TBA</em>')+'</td>' +
-        '<td class="num">'+(b.revenue ? fmtTHB(b.revenue) : '\u2014')+'</td>';
+        '<td class="num">'+(b.revenue ? fmtTHB(b.revenue) : '\u2014')+'</td>' +
+        actionsCell;
       tbody.appendChild(tr);
     });
     if (countLabel) countLabel.textContent = 'Showing ' + rows.length + ' of ' + BOOKINGS.length + ' bookings';
@@ -1816,6 +2055,7 @@
     }
 
     wireVenueModal();
+    wireEditModal();
     renderAll();
     initDb();
     wireSaveButtons();
