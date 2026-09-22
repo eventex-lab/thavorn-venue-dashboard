@@ -779,6 +779,14 @@
   .save-msg.ok{color:var(--def-fg); font-weight:600;}
   .save-msg.err{color:var(--lost-fg); font-weight:600;}
 
+  button.trash-btn{font:inherit; background:var(--surface); cursor:pointer;}
+  button.trash-btn:hover{border-color:var(--lost-fg); color:var(--lost-fg);}
+  #trash-count-badge:empty{display:none;}
+  #trash-count-badge{
+    display:inline-block; margin-left:.35rem; background:var(--lost-bg); color:var(--lost-fg);
+    font-weight:700; border-radius:100px; padding:.05rem .45rem; font-size:.68rem;
+  }
+
   #live-indicator{display:inline-flex; align-items:center; gap:.4rem;}
   .live-dot{width:7px; height:7px; border-radius:50%; background:var(--ink-faint); display:inline-block;}
   .live-dot.on{background:var(--def-fg); box-shadow:0 0 0 0 rgba(47,125,94,.5); animation:live-pulse 2s infinite;}
@@ -818,6 +826,16 @@
   .venue-checks input{accent-color:var(--accent); margin:0;}
   .venue-checks input:checked + span{color:var(--ink); font-weight:700;}
   .venue-checks label:has(input:checked){border-color:var(--accent); background:var(--accent-soft);}
+
+  .trash-row{
+    display:flex; flex-wrap:wrap; align-items:center; gap:.5rem;
+    padding:.7rem 0; border-bottom:1px solid var(--border-soft); font-size:.85rem;
+  }
+  .trash-row:last-child{border-bottom:none;}
+  .trash-row .tr-name{color:var(--ink); font-weight:600; flex:1 1 160px;}
+  .trash-row .tr-meta{font-size:.75rem; color:var(--ink-soft); width:100%; display:flex; flex-wrap:wrap; gap:.5rem; align-items:center;}
+  .trash-row .tr-actions{margin-left:auto; display:flex; gap:.4rem; flex-shrink:0;}
+  .row-btn.row-restore:hover{border-color:var(--def-fg); color:var(--def-fg);}
 
   @media print{
     body{padding:0; background:#fff;}
@@ -916,6 +934,7 @@
     <div class="section-head">
       <span class="mark">II.</span>
       <h2>All Bookings</h2>
+      <button type="button" class="tag trash-btn no-print" id="trash-open-btn" title="View deleted bookings" style="cursor:pointer; margin-left:.5rem;">&#128465; Trash<span id="trash-count-badge"></span></button>
       <span class="tag" id="live-indicator"><span class="live-dot" id="live-dot"></span> <span id="live-text">Connecting&hellip;</span></span>
     </div>
     <div class="section-body">
@@ -1328,6 +1347,19 @@
   </div>
 </div>
 
+<div class="modal-overlay hidden no-print" id="trash-modal" aria-hidden="true">
+  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="trash-modal-title">
+    <div class="modal-header">
+      <div>
+        <h3 id="trash-modal-title">Trash</h3>
+        <div class="modal-sub" id="trash-modal-sub">Deleted bookings &mdash; restore them or remove them for good.</div>
+      </div>
+      <button type="button" class="modal-close" id="trash-modal-close" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body" id="trash-modal-body"></div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 (function(){
@@ -1522,7 +1554,8 @@
       pax: r.pax || '', cutoff: r.cutoff || '', revenue: r.revenue,
       venues: r.venues || [], dateSort: r.date_sort, source: r.source || 'sheet',
       package: r.package || '',
-      referenceNo: r.reference_no || '', preparedBy: r.prepared_by || '', dateRaised: r.date_raised || ''
+      referenceNo: r.reference_no || '', preparedBy: r.prepared_by || '', dateRaised: r.date_raised || '',
+      deletedAt: r.deleted_at || null, deletedBy: r.deleted_by || ''
     };
   }
 
@@ -1847,12 +1880,14 @@
       if (!editingId || !supabaseClient) return;
       var booking = BOOKINGS.filter(function(x){ return String(x.id) === String(editingId); })[0];
       var label = booking ? (booking.eventName + ' — ' + booking.date) : 'this booking';
-      if (!window.confirm('Delete "' + label + '"? This can’t be undone.')) return;
+      if (!window.confirm('Move "' + label + '" to Trash? You can restore it later.')) return;
+      var who = (window.prompt('Your name or initials (recorded as who deleted this):') || '').trim();
+      if (!who) return;
       saveBtn.disabled = true;
       delBtn.disabled = true;
-      msgEl.textContent = 'Deleting…';
+      msgEl.textContent = 'Moving to Trash…';
       msgEl.className = 'save-msg';
-      supabaseClient.from('bookings').delete().eq('id', editingId).then(function(res){
+      supabaseClient.from('bookings').update({deleted_at: new Date().toISOString(), deleted_by: who}).eq('id', editingId).then(function(res){
         saveBtn.disabled = false;
         delBtn.disabled = false;
         if (res.error){
@@ -1868,11 +1903,116 @@
 
   function quickDeleteBooking(b){
     if (!supabaseClient || !b || !b.id) return;
-    if (!window.confirm('Delete "' + b.eventName + ' — ' + b.date + '"? This can’t be undone.')) return;
-    supabaseClient.from('bookings').delete().eq('id', b.id).then(function(res){
+    if (!window.confirm('Move "' + b.eventName + ' — ' + b.date + '" to Trash? You can restore it later.')) return;
+    var who = (window.prompt('Your name or initials (recorded as who deleted this):') || '').trim();
+    if (!who) return;
+    supabaseClient.from('bookings').update({deleted_at: new Date().toISOString(), deleted_by: who}).eq('id', b.id).then(function(res){
       if (res.error){ window.alert('Couldn’t delete that booking — please try again.'); return; }
       fetchBookings();
     });
+  }
+
+  /* ================= TRASH (SOFT-DELETE) ================= */
+  var TRASHED = [];
+
+  function fmtTrashDate(iso){
+    if (!iso) return '';
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return String(iso);
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var hh = d.getHours(); var mm = d.getMinutes();
+    var ampm = hh >= 12 ? 'PM' : 'AM';
+    var hh12 = hh % 12; if (hh12 === 0) hh12 = 12;
+    return d.getDate() + ' ' + months[d.getMonth()] + ' ' + String(d.getFullYear()).slice(2) +
+      ', ' + hh12 + ':' + (mm < 10 ? '0'+mm : mm) + ' ' + ampm;
+  }
+
+  function renderTrashBadge(){
+    var badge = document.getElementById('trash-count-badge');
+    if (!badge) return;
+    badge.textContent = TRASHED.length > 0 ? String(TRASHED.length) : '';
+  }
+
+  function renderTrashModal(){
+    var body = document.getElementById('trash-modal-body');
+    if (!body) return;
+    var items = TRASHED.slice().sort(function(a,b){ return (b.deletedAt||'').localeCompare(a.deletedAt||''); });
+    if (items.length === 0){
+      body.innerHTML = '<p class="venue-empty-note">Trash is empty.</p>';
+      return;
+    }
+    body.innerHTML = items.map(function(b){
+      return '<div class="trash-row" data-id="'+escapeHtml(String(b.id))+'">' +
+        '<span class="status-dot '+String(b.status||'').toLowerCase()+'"></span>' +
+        '<span class="tr-name">'+escapeHtml(b.eventName || '(untitled)')+'</span>' +
+        '<span class="tag-type '+String(b.section||'').toLowerCase()+'">'+escapeHtml(b.section||'')+'</span>' +
+        '<span class="tr-actions">' +
+          '<button type="button" class="row-btn row-restore" data-id="'+escapeHtml(String(b.id))+'">Restore</button>' +
+          '<button type="button" class="row-btn row-purge" data-id="'+escapeHtml(String(b.id))+'">Delete forever</button>' +
+        '</span>' +
+        '<span class="tr-meta">' +
+          '<span>'+escapeHtml(b.date||'')+'</span>' +
+          '<span>&middot; deleted by '+escapeHtml(b.deletedBy || 'unknown')+'</span>' +
+          '<span>&middot; '+fmtTrashDate(b.deletedAt)+'</span>' +
+        '</span>' +
+      '</div>';
+    }).join('');
+  }
+
+  function openTrashModal(){
+    var overlay = document.getElementById('trash-modal');
+    if (!overlay) return;
+    renderTrashModal();
+    overlay.classList.remove('hidden');
+    overlay.setAttribute('aria-hidden', 'false');
+  }
+
+  function closeTrashModal(){
+    var overlay = document.getElementById('trash-modal');
+    if (!overlay) return;
+    overlay.classList.add('hidden');
+    overlay.setAttribute('aria-hidden', 'true');
+  }
+
+  function restoreBooking(id){
+    if (!supabaseClient || !id) return;
+    supabaseClient.from('bookings').update({deleted_at: null, deleted_by: null}).eq('id', id).then(function(res){
+      if (res.error){ window.alert('Couldn’t restore that booking — please try again.'); return; }
+      fetchBookings();
+    });
+  }
+
+  function permanentlyDeleteBooking(id){
+    if (!supabaseClient || !id) return;
+    if (!window.confirm('Permanently delete this booking? This cannot be undone.')) return;
+    supabaseClient.from('bookings').delete().eq('id', id).then(function(res){
+      if (res.error){ window.alert('Couldn’t permanently delete that booking — please try again.'); return; }
+      fetchBookings();
+    });
+  }
+
+  function wireTrashModal(){
+    var overlay = document.getElementById('trash-modal');
+    var openBtn = document.getElementById('trash-open-btn');
+    if (!overlay) return;
+    if (openBtn) openBtn.addEventListener('click', openTrashModal);
+    var closeBtn = document.getElementById('trash-modal-close');
+    if (closeBtn) closeBtn.addEventListener('click', closeTrashModal);
+    overlay.addEventListener('click', function(ev){
+      if (ev.target === overlay) closeTrashModal();
+    });
+    document.addEventListener('keydown', function(ev){
+      if (ev.key === 'Escape' && !overlay.classList.contains('hidden')) closeTrashModal();
+    });
+    var body = document.getElementById('trash-modal-body');
+    if (body){
+      body.addEventListener('click', function(ev){
+        var restoreBtn = ev.target.closest ? ev.target.closest('.row-restore') : null;
+        var purgeBtn = ev.target.closest ? ev.target.closest('.row-purge') : null;
+        if (restoreBtn){ restoreBooking(restoreBtn.getAttribute('data-id')); }
+        else if (purgeBtn){ permanentlyDeleteBooking(purgeBtn.getAttribute('data-id')); }
+      });
+    }
   }
 
   /* ================= FILTER STATE (shared by table & calendar) ================= */
@@ -2077,6 +2217,7 @@
 
     wireVenueModal();
     wireEditModal();
+    wireTrashModal();
     renderAll();
     initDb();
     wireSaveButtons();
@@ -2108,10 +2249,16 @@
         setLive('offline', 'Sync interrupted \u2014 showing last saved snapshot');
         return;
       }
-      var live = (res.data || []).map(rowToBooking);
-      if (live.length > 0){ BOOKINGS = live; }
+      var rows = (res.data || []).map(rowToBooking);
+      var active = rows.filter(function(r){ return !r.deletedAt; });
+      var trashed = rows.filter(function(r){ return !!r.deletedAt; });
+      if (rows.length > 0){ BOOKINGS = active; }
+      TRASHED = trashed;
       setLive('live');
       renderAll();
+      renderTrashBadge();
+      var trashOverlay = document.getElementById('trash-modal');
+      if (trashOverlay && !trashOverlay.classList.contains('hidden')) renderTrashModal();
     });
   }
 
