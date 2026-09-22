@@ -1360,6 +1360,27 @@
   </div>
 </div>
 
+<div class="modal-overlay hidden no-print" id="confirm-modal" aria-hidden="true">
+  <div class="modal-panel" role="alertdialog" aria-modal="true" aria-labelledby="confirm-modal-title" style="width:min(400px, 100%);">
+    <div class="modal-header">
+      <div>
+        <h3 id="confirm-modal-title">Confirm</h3>
+      </div>
+      <button type="button" class="modal-close" id="confirm-modal-x" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p id="confirm-modal-message" style="margin:0 0 .9rem; font-size:.9rem; color:var(--ink-soft); white-space:pre-line;"></p>
+      <div class="field" id="confirm-modal-input-wrap" style="margin-bottom:.9rem;">
+        <input type="text" id="confirm-modal-input" placeholder="">
+      </div>
+      <div class="save-bar no-print" style="justify-content:flex-end;">
+        <button type="button" class="row-btn" id="confirm-modal-cancel" style="padding:.6rem 1rem;">Cancel</button>
+        <button type="button" class="danger-btn" id="confirm-modal-ok">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 (function(){
@@ -1880,35 +1901,50 @@
       if (!editingId || !supabaseClient) return;
       var booking = BOOKINGS.filter(function(x){ return String(x.id) === String(editingId); })[0];
       var label = booking ? (booking.eventName + ' — ' + booking.date) : 'this booking';
-      if (!window.confirm('Move "' + label + '" to Trash? You can restore it later.')) return;
-      var who = (window.prompt('Your name or initials (recorded as who deleted this):') || '').trim();
-      if (!who) return;
-      saveBtn.disabled = true;
-      delBtn.disabled = true;
-      msgEl.textContent = 'Moving to Trash…';
-      msgEl.className = 'save-msg';
-      supabaseClient.from('bookings').update({deleted_at: new Date().toISOString(), deleted_by: who}).eq('id', editingId).then(function(res){
-        saveBtn.disabled = false;
-        delBtn.disabled = false;
-        if (res.error){
-          msgEl.textContent = 'Couldn’t delete that booking — please try again.';
-          msgEl.className = 'save-msg err';
-          return;
-        }
-        fetchBookings();
-        closeEditModal();
+      var thisEditingId = editingId;
+      askConfirm({
+        title: 'Move to Trash',
+        message: 'Move "' + label + '" to Trash? You can restore it later.',
+        needsInput: true,
+        inputPlaceholder: 'Your name or initials',
+        confirmLabel: 'Move to Trash',
+        danger: true
+      }).then(function(who){
+        if (!who) return;
+        saveBtn.disabled = true;
+        delBtn.disabled = true;
+        msgEl.textContent = 'Moving to Trash…';
+        msgEl.className = 'save-msg';
+        supabaseClient.from('bookings').update({deleted_at: new Date().toISOString(), deleted_by: who}).eq('id', thisEditingId).then(function(res){
+          saveBtn.disabled = false;
+          delBtn.disabled = false;
+          if (res.error){
+            msgEl.textContent = 'Couldn’t delete that booking — please try again.';
+            msgEl.className = 'save-msg err';
+            return;
+          }
+          fetchBookings();
+          closeEditModal();
+        });
       });
     });
   }
 
   function quickDeleteBooking(b){
     if (!supabaseClient || !b || !b.id) return;
-    if (!window.confirm('Move "' + b.eventName + ' — ' + b.date + '" to Trash? You can restore it later.')) return;
-    var who = (window.prompt('Your name or initials (recorded as who deleted this):') || '').trim();
-    if (!who) return;
-    supabaseClient.from('bookings').update({deleted_at: new Date().toISOString(), deleted_by: who}).eq('id', b.id).then(function(res){
-      if (res.error){ window.alert('Couldn’t delete that booking — please try again.'); return; }
-      fetchBookings();
+    askConfirm({
+      title: 'Move to Trash',
+      message: 'Move "' + b.eventName + ' — ' + b.date + '" to Trash? You can restore it later.',
+      needsInput: true,
+      inputPlaceholder: 'Your name or initials',
+      confirmLabel: 'Move to Trash',
+      danger: true
+    }).then(function(who){
+      if (!who) return;
+      supabaseClient.from('bookings').update({deleted_at: new Date().toISOString(), deleted_by: who}).eq('id', b.id).then(function(res){
+        if (res.error){ notify('Couldn’t delete that booking — please try again.', 'Error'); return; }
+        fetchBookings();
+      });
     });
   }
 
@@ -1977,17 +2013,24 @@
   function restoreBooking(id){
     if (!supabaseClient || !id) return;
     supabaseClient.from('bookings').update({deleted_at: null, deleted_by: null}).eq('id', id).then(function(res){
-      if (res.error){ window.alert('Couldn’t restore that booking — please try again.'); return; }
+      if (res.error){ notify('Couldn’t restore that booking — please try again.', 'Error'); return; }
       fetchBookings();
     });
   }
 
   function permanentlyDeleteBooking(id){
     if (!supabaseClient || !id) return;
-    if (!window.confirm('Permanently delete this booking? This cannot be undone.')) return;
-    supabaseClient.from('bookings').delete().eq('id', id).then(function(res){
-      if (res.error){ window.alert('Couldn’t permanently delete that booking — please try again.'); return; }
-      fetchBookings();
+    askConfirm({
+      title: 'Delete forever',
+      message: 'Permanently delete this booking? This cannot be undone.',
+      confirmLabel: 'Delete forever',
+      danger: true
+    }).then(function(ok){
+      if (!ok) return;
+      supabaseClient.from('bookings').delete().eq('id', id).then(function(res){
+        if (res.error){ notify('Couldn’t permanently delete that booking — please try again.', 'Error'); return; }
+        fetchBookings();
+      });
     });
   }
 
@@ -2013,6 +2056,82 @@
         else if (purgeBtn){ permanentlyDeleteBooking(purgeBtn.getAttribute('data-id')); }
       });
     }
+  }
+
+  /* ================= CUSTOM CONFIRM / PROMPT MODAL =================
+     Native window.confirm()/prompt() are unreliable in some in-app browsers
+     (e.g. LINE/Facebook in-app browsers commonly used on mobile in Thailand
+     silently suppress or auto-dismiss them), which would make Delete look
+     like it "does nothing". This in-page modal works everywhere instead. */
+  var confirmModalResolve = null;
+
+  function askConfirm(opts){
+    opts = opts || {};
+    return new Promise(function(resolve){
+      var overlay = document.getElementById('confirm-modal');
+      if (!overlay){ resolve(opts.needsInput ? null : window.confirm(opts.message || '')); return; }
+      confirmModalResolve = resolve;
+      document.getElementById('confirm-modal-title').textContent = opts.title || 'Confirm';
+      document.getElementById('confirm-modal-message').textContent = opts.message || '';
+      var inputWrap = document.getElementById('confirm-modal-input-wrap');
+      var input = document.getElementById('confirm-modal-input');
+      var cancelBtn = document.getElementById('confirm-modal-cancel');
+      var okBtn = document.getElementById('confirm-modal-ok');
+      if (opts.needsInput){
+        inputWrap.style.display = '';
+        input.value = '';
+        input.placeholder = opts.inputPlaceholder || '';
+      } else {
+        inputWrap.style.display = 'none';
+      }
+      cancelBtn.style.display = opts.hideCancel ? 'none' : '';
+      okBtn.textContent = opts.confirmLabel || 'OK';
+      okBtn.className = opts.danger ? 'danger-btn' : 'save-btn';
+      overlay.classList.remove('hidden');
+      overlay.setAttribute('aria-hidden', 'false');
+      setTimeout(function(){ (opts.needsInput ? input : okBtn).focus(); }, 30);
+    });
+  }
+
+  function closeConfirmModal(result){
+    var overlay = document.getElementById('confirm-modal');
+    if (!overlay) return;
+    overlay.classList.add('hidden');
+    overlay.setAttribute('aria-hidden', 'true');
+    if (confirmModalResolve){
+      var resolve = confirmModalResolve;
+      confirmModalResolve = null;
+      resolve(result);
+    }
+  }
+
+  function notify(message, title){
+    return askConfirm({title: title || 'Notice', message: message, hideCancel: true, confirmLabel: 'OK'});
+  }
+
+  function wireConfirmModal(){
+    var overlay = document.getElementById('confirm-modal');
+    if (!overlay) return;
+    var input = document.getElementById('confirm-modal-input');
+    var inputWrap = document.getElementById('confirm-modal-input-wrap');
+    document.getElementById('confirm-modal-cancel').addEventListener('click', function(){ closeConfirmModal(null); });
+    document.getElementById('confirm-modal-x').addEventListener('click', function(){ closeConfirmModal(null); });
+    document.getElementById('confirm-modal-ok').addEventListener('click', function(){
+      if (inputWrap.style.display !== 'none'){
+        var val = input.value.trim();
+        if (!val){ input.focus(); return; }
+        closeConfirmModal(val);
+      } else {
+        closeConfirmModal(true);
+      }
+    });
+    overlay.addEventListener('click', function(ev){ if (ev.target === overlay) closeConfirmModal(null); });
+    input.addEventListener('keydown', function(ev){
+      if (ev.key === 'Enter'){ ev.preventDefault(); document.getElementById('confirm-modal-ok').click(); }
+    });
+    document.addEventListener('keydown', function(ev){
+      if (ev.key === 'Escape' && !overlay.classList.contains('hidden')) closeConfirmModal(null);
+    });
   }
 
   /* ================= FILTER STATE (shared by table & calendar) ================= */
@@ -2218,6 +2337,7 @@
     wireVenueModal();
     wireEditModal();
     wireTrashModal();
+    wireConfirmModal();
     renderAll();
     initDb();
     wireSaveButtons();
