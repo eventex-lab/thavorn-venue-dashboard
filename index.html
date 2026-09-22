@@ -143,28 +143,6 @@
   }
   .masthead h1{font-size:2.1rem; font-weight:600; line-height:1.1;}
   .masthead .sub{color:var(--ink-soft); font-size:.95rem; max-width:34ch;}
-  .meta-block{
-    display:grid;
-    grid-template-columns:auto auto;
-    gap:.35rem 1rem;
-    font-size:.82rem;
-    color:var(--ink-soft);
-    text-align:right;
-  }
-  .meta-block dt{font-weight:600; color:var(--ink-faint); text-align:right;}
-  .meta-block dd{margin:0; font-family:'IBM Plex Mono', monospace;}
-  .meta-block input{
-    font-family:'IBM Plex Mono', monospace;
-    font-size:.82rem;
-    text-align:right;
-    border:none;
-    border-bottom:1px dashed var(--border);
-    background:transparent;
-    color:var(--ink);
-    width:11ch;
-    padding:.1rem 0;
-  }
-  .meta-block input:focus{outline:none; border-bottom-color:var(--accent);}
 
   /* ---------- Status legend ---------- */
   .legend{
@@ -851,9 +829,6 @@
     body{padding-block:1.5rem 3rem;}
     .masthead{flex-direction:column; align-items:flex-start;}
     .masthead h1{font-size:1.6rem;}
-    .meta-block{text-align:left; grid-template-columns:auto 1fr;}
-    .meta-block dt{text-align:left;}
-    .meta-block input{text-align:left;}
     .section-head{padding:1rem 1.1rem;}
     .section-body{padding:1.1rem;}
     .section-head .tag{margin-left:0;}
@@ -878,11 +853,6 @@
       <h1>Venue Reservation Record</h1>
       <p class="sub">Booking intake for Wedding, MICE &amp; Romantic Dining events &mdash; 2026&ndash;2030. One record per enquiry, carried through to Definite.</p>
     </div>
-    <dl class="meta-block">
-      <dt>Reference No.</dt><dd><input type="text" id="ref-no" placeholder="TBV-26-___"></dd>
-      <dt>Prepared by</dt><dd><input type="text" id="prepared-by" placeholder="initials"></dd>
-      <dt>Date raised</dt><dd><input type="date" id="date-raised"></dd>
-    </dl>
   </header>
 
   <nav class="jumpnav no-print" aria-label="Section jump links">
@@ -972,7 +942,7 @@
         <div class="table-scroll">
           <table class="bookings">
             <thead>
-              <tr><th>Date</th><th>Event</th><th>Type</th><th>Status</th><th>Pax</th><th>Venue(s)</th><th style="text-align:right;">Revenue (THB)</th><th class="no-print">Actions</th></tr>
+              <tr><th>Date</th><th>Ref. No.</th><th>Event</th><th>Type</th><th>Status</th><th>Pax</th><th>Venue(s)</th><th style="text-align:right;">Revenue (THB)</th><th class="no-print">Actions</th></tr>
             </thead>
             <tbody id="bk-tbody"></tbody>
           </table>
@@ -1020,6 +990,15 @@
           <div class="field"><label for="wd-by">By (sales rep)</label><input type="text" id="wd-by" placeholder="name"></div>
           <div class="field"><label for="wd-pax">Total of guest (pax)</label><input type="number" min="0" id="wd-pax"></div>
           <div class="field"><label for="wd-cutoff">Cut-off date</label><input type="date" id="wd-cutoff"></div>
+        </div>
+      </div>
+
+      <div>
+        <span class="block-label">Document reference</span>
+        <div class="field-grid">
+          <div class="field"><label for="wd-ref">Reference No.</label><input type="text" id="wd-ref" placeholder="TBV-26-___"></div>
+          <div class="field"><label for="wd-prepared-by">Prepared by</label><input type="text" id="wd-prepared-by" placeholder="initials"></div>
+          <div class="field"><label for="wd-date-raised">Date raised</label><input type="date" id="wd-date-raised"></div>
         </div>
       </div>
 
@@ -1133,6 +1112,15 @@
       </div>
 
       <div>
+        <span class="block-label">Document reference</span>
+        <div class="field-grid">
+          <div class="field"><label for="mi-ref">Reference No.</label><input type="text" id="mi-ref" placeholder="TBV-26-___"></div>
+          <div class="field"><label for="mi-prepared-by">Prepared by</label><input type="text" id="mi-prepared-by" placeholder="initials"></div>
+          <div class="field"><label for="mi-date-raised">Date raised</label><input type="date" id="mi-date-raised"></div>
+        </div>
+      </div>
+
+      <div>
         <span class="block-label">Status</span>
         <div class="status-picker" role="radiogroup" aria-label="MICE booking status">
           <label><input type="radio" name="mi-status" value="INQ" checked><span>INQ</span></label>
@@ -1207,6 +1195,15 @@
           <div class="field"><label for="ro-by">By (sales rep)</label><input type="text" id="ro-by" placeholder="name"></div>
           <div class="field"><label for="ro-pax">Total of guest (pax)</label><input type="number" min="0" id="ro-pax"></div>
           <div class="field"><label for="ro-cutoff">Cut-off date</label><input type="date" id="ro-cutoff"></div>
+        </div>
+      </div>
+
+      <div>
+        <span class="block-label">Document reference</span>
+        <div class="field-grid">
+          <div class="field"><label for="ro-ref">Reference No.</label><input type="text" id="ro-ref" placeholder="TBV-26-___"></div>
+          <div class="field"><label for="ro-prepared-by">Prepared by</label><input type="text" id="ro-prepared-by" placeholder="initials"></div>
+          <div class="field"><label for="ro-date-raised">Date raised</label><input type="date" id="ro-date-raised"></div>
         </div>
       </div>
 
@@ -1293,6 +1290,15 @@
         <div class="field"><label for="em-pax">Total of guest (pax)</label><input type="text" id="em-pax"></div>
         <div class="field"><label for="em-cutoff">Cut-off date</label><input type="text" id="em-cutoff" placeholder="e.g. 20-Mar-26 or Block"></div>
         <div class="field"><label for="em-revenue">Revenue &mdash; OTB total (THB)</label><input type="number" id="em-revenue"></div>
+      </div>
+
+      <div style="margin-top:1rem;">
+        <span class="block-label">Document reference</span>
+        <div class="field-grid">
+          <div class="field"><label for="em-ref">Reference No.</label><input type="text" id="em-ref" placeholder="TBV-26-___"></div>
+          <div class="field"><label for="em-prepared-by">Prepared by</label><input type="text" id="em-prepared-by" placeholder="initials"></div>
+          <div class="field"><label for="em-date-raised">Date raised</label><input type="date" id="em-date-raised"></div>
+        </div>
       </div>
 
       <div style="margin-top:1rem;">
@@ -1515,7 +1521,8 @@
       by: r.by || '', section: r.section, status: r.status,
       pax: r.pax || '', cutoff: r.cutoff || '', revenue: r.revenue,
       venues: r.venues || [], dateSort: r.date_sort, source: r.source || 'sheet',
-      package: r.package || ''
+      package: r.package || '',
+      referenceNo: r.reference_no || '', preparedBy: r.prepared_by || '', dateRaised: r.date_raised || ''
     };
   }
 
@@ -1738,6 +1745,9 @@
     setFieldVal('em-pax', b.pax || '');
     setFieldVal('em-cutoff', b.cutoff || '');
     setFieldVal('em-revenue', (b.revenue === null || b.revenue === undefined) ? '' : b.revenue);
+    setFieldVal('em-ref', b.referenceNo || '');
+    setFieldVal('em-prepared-by', b.preparedBy || '');
+    setFieldVal('em-date-raised', b.dateRaised || '');
     var statusRadios = document.querySelectorAll('input[name="em-status"]');
     statusRadios.forEach(function(r){ r.checked = (r.value === b.status); });
     buildVenueChecks(b.venues || []);
@@ -1809,7 +1819,10 @@
         status: statusEl ? statusEl.value : 'INQ',
         pax: fieldVal('em-pax'), cutoff: fieldVal('em-cutoff'),
         revenue: (revenue === null || isFinite(revenue)) ? revenue : null,
-        venues: venues
+        venues: venues,
+        reference_no: fieldVal('em-ref').trim() || null,
+        prepared_by: fieldVal('em-prepared-by').trim() || null,
+        date_raised: fieldVal('em-date-raised') || null
       };
       saveBtn.disabled = true;
       delBtn.disabled = true;
@@ -1877,7 +1890,7 @@
       if (type && b.section !== type) return false;
       if (mo && b.month !== mo) return false;
       if (q){
-        var hay = (b.eventName+' '+(b.venues||[]).join(' ')+' '+b.date).toLowerCase();
+        var hay = (b.eventName+' '+(b.venues||[]).join(' ')+' '+b.date+' '+(b.referenceNo||'')+' '+(b.preparedBy||'')).toLowerCase();
         if (hay.indexOf(q) === -1) return false;
       }
       return true;
@@ -1897,7 +1910,9 @@
       var actionsCell = canEdit
         ? '<td class="row-actions no-print"><button type="button" class="row-btn row-edit" data-id="'+escapeHtml(b.id)+'">Edit</button><button type="button" class="row-btn row-del" data-id="'+escapeHtml(b.id)+'">Delete</button></td>'
         : '<td class="row-actions no-print"><span class="venues-cell">&mdash;</span></td>';
+      var refTitle = [b.preparedBy ? ('Prepared by '+b.preparedBy) : '', b.dateRaised ? ('Raised '+b.dateRaised) : ''].filter(Boolean).join(' · ');
       tr.innerHTML = '<td class="num">'+b.date+'</td>' +
+        '<td class="venues-cell" title="'+escapeHtml(refTitle)+'">'+(b.referenceNo ? escapeHtml(b.referenceNo) : '—')+'</td>' +
         '<td>'+escapeHtml(b.eventName)+(b.source==='form'?'<span class="tag-new">NEW</span>':'')+(b.by ? '<br><span class="venues-cell">by '+escapeHtml(b.by)+'</span>' : '')+'</td>' +
         '<td><span class="tag-type '+b.section.toLowerCase()+'">'+b.section+'</span></td>' +
         '<td><span class="status-dot '+b.status.toLowerCase()+'"></span>'+b.status+'</td>' +
@@ -2121,6 +2136,12 @@
     if (isNaN(d.getTime())) return null;
     return { month: MONTH_NAMES[d.getMonth()], disp: d.getDate()+' '+MONTH_NAMES[d.getMonth()]+' '+String(d.getFullYear()).slice(2), sort: iso };
   }
+  function todayISO(){
+    var t = new Date();
+    var mm = String(t.getMonth()+1).padStart(2,'0');
+    var dd = String(t.getDate()).padStart(2,'0');
+    return t.getFullYear()+'-'+mm+'-'+dd;
+  }
 
   function wireSaveButtons(){
     var wdBtn = document.getElementById('wd-save');
@@ -2129,6 +2150,9 @@
     if (wdBtn) wdBtn.addEventListener('click', function(){ saveBooking('wedding', wdBtn, document.getElementById('wd-save-msg')); });
     if (miBtn) miBtn.addEventListener('click', function(){ saveBooking('mice', miBtn, document.getElementById('mi-save-msg')); });
     if (roBtn) roBtn.addEventListener('click', function(){ saveBooking('romantic', roBtn, document.getElementById('ro-save-msg')); });
+    setFieldVal('wd-date-raised', todayISO());
+    setFieldVal('mi-date-raised', todayISO());
+    setFieldVal('ro-date-raised', todayISO());
   }
 
   function saveBooking(kind, btn, msgEl){
@@ -2152,6 +2176,7 @@
         pax: fieldVal('wd-pax'), cutoff: fieldVal('wd-cutoff'),
         revenue: tableTotal('table[data-group="wd-rev"]'),
         venues: venues, package: fieldVal('wd-package'),
+        referenceNo: fieldVal('wd-ref').trim(), preparedBy: fieldVal('wd-prepared-by').trim(), dateRaised: fieldVal('wd-date-raised'),
         source: 'form', createdAt: new Date().toISOString()
       };
     } else if (kind === 'mice'){
@@ -2171,6 +2196,7 @@
         pax: fieldVal('mi-pax'), cutoff: fieldVal('mi-cutoff'),
         revenue: tableTotal('table[data-group="mi-rev"]'),
         venues: venues2, package: fieldVal('mi-package'),
+        referenceNo: fieldVal('mi-ref').trim(), preparedBy: fieldVal('mi-prepared-by').trim(), dateRaised: fieldVal('mi-date-raised'),
         source: 'form', createdAt: new Date().toISOString()
       };
     } else {
@@ -2190,6 +2216,7 @@
         pax: fieldVal('ro-pax'), cutoff: fieldVal('ro-cutoff'),
         revenue: tableTotal('table[data-group="ro-rev"]'),
         venues: venues3, package: '',
+        referenceNo: fieldVal('ro-ref').trim(), preparedBy: fieldVal('ro-prepared-by').trim(), dateRaised: fieldVal('ro-date-raised'),
         source: 'form', createdAt: new Date().toISOString()
       };
     }
@@ -2205,7 +2232,8 @@
       month: data.month, date: data.date, event_name: data.eventName, by: data.by,
       section: data.section, status: data.status, pax: data.pax, cutoff: data.cutoff,
       revenue: data.revenue, venues: data.venues, date_sort: data.dateSort,
-      source: data.source, package: data.package
+      source: data.source, package: data.package,
+      reference_no: data.referenceNo || null, prepared_by: data.preparedBy || null, date_raised: data.dateRaised || null
     };
 
     btn.disabled = true;
@@ -2225,18 +2253,21 @@
         setFieldVal('wd-date',''); setFieldVal('wd-event-name',''); setFieldVal('wd-by','');
         setFieldVal('wd-pax',''); setFieldVal('wd-cutoff',''); setFieldVal('wd-package','');
         setFieldVal('wd-venue-ceremony',''); setFieldVal('wd-venue-dinner',''); setFieldVal('wd-venue-afterparty','');
+        setFieldVal('wd-ref',''); setFieldVal('wd-prepared-by',''); setFieldVal('wd-date-raised', todayISO());
         var inqWd = document.querySelector('input[name="wd-status"][value="INQ"]'); if (inqWd) inqWd.checked = true;
         resetRevTable('table[data-group="wd-rev"]');
       } else if (kind === 'mice'){
         setFieldVal('mi-date',''); setFieldVal('mi-event-name',''); setFieldVal('mi-pax','');
         setFieldVal('mi-cutoff',''); setFieldVal('mi-package',''); setFieldVal('mi-netprice','');
         setFieldVal('mi-venue1',''); setFieldVal('mi-venue2',''); setFieldVal('mi-venue3','');
+        setFieldVal('mi-ref',''); setFieldVal('mi-prepared-by',''); setFieldVal('mi-date-raised', todayISO());
         var inqMi = document.querySelector('input[name="mi-status"][value="INQ"]'); if (inqMi) inqMi.checked = true;
         resetRevTable('table[data-group="mi-rev"]');
       } else {
         setFieldVal('ro-date',''); setFieldVal('ro-event-name',''); setFieldVal('ro-by','');
         setFieldVal('ro-pax',''); setFieldVal('ro-cutoff','');
         setFieldVal('ro-venue','');
+        setFieldVal('ro-ref',''); setFieldVal('ro-prepared-by',''); setFieldVal('ro-date-raised', todayISO());
         var inqRo = document.querySelector('input[name="ro-status"][value="INQ"]'); if (inqRo) inqRo.checked = true;
         resetRevTable('table[data-group="ro-rev"]');
       }
