@@ -740,22 +740,20 @@
 
   @media (max-width:640px){
     .cal-head span{font-size:.6rem; padding:.35rem 0;}
-    .cal-cell{min-height:74px; max-height:none; padding:.3rem .25rem; gap:.2rem;}
-    .cal-daynum{font-size:.66rem;}
-    .cal-events{gap:.16rem;}
+    .cal-cell{height:100px; padding:.3rem .25rem; gap:.16rem; overflow:hidden;}
+    .cal-daynum{font-size:.66rem; flex:0 0 auto;}
+    .cal-events{gap:.14rem; flex:1 1 auto; min-height:0; overflow-y:auto;}
     .cal-event{
-      font-size:.62rem; line-height:1.25; padding:.16rem .3rem;
-      white-space:normal; overflow-wrap:break-word; overflow:visible; height:auto;
+      font-size:.64rem; line-height:1.3; padding:.14rem .3rem; flex:0 0 auto;
     }
-    .cal-event .cal-event-dot{margin-top:.15rem; align-self:flex-start;}
     .cal-legend{font-size:.7rem; gap:.8rem;}
   }
 
   @media (max-width:480px){
     .cal-head span{font-size:.52rem;}
-    .cal-cell{min-height:58px;}
+    .cal-cell{height:82px;}
     .cal-daynum{font-size:.6rem;}
-    .cal-event{font-size:.56rem; padding:.14rem .24rem;}
+    .cal-event{font-size:.58rem; padding:.12rem .26rem;}
   }
 
   .table-scroll{max-height:560px; overflow:auto; border:1px solid var(--border-soft); border-radius:10px;}
