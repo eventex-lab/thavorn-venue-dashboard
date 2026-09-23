@@ -733,16 +733,34 @@
   .cal-event .cal-event-dot{width:6px; height:6px; border-radius:50%; flex:0 0 auto;}
   .cal-event-editable{cursor:pointer;}
   .cal-event-editable:hover{background:var(--accent-soft); outline:1px solid var(--accent);}
+  .cal-event.sec-wedding{background:var(--gold-soft); color:var(--gold-ink);}
+  .cal-event.sec-mice{background:var(--accent-soft); color:var(--accent-ink);}
+  .cal-event.sec-romantic{background:var(--rose-bg); color:var(--rose-fg);}
   .cal-empty-month{padding:2rem; text-align:center; color:var(--ink-faint); font-size:.85rem;}
 
   @media (max-width:640px){
-    .cal-cell{min-height:64px;}
-    .cal-daynum{font-size:.64rem;}
-    .cal-event{font-size:.6rem;}
+    .cal-head span{font-size:.6rem; padding:.35rem 0;}
+    .cal-cell{min-height:74px; max-height:none; padding:.3rem .25rem; gap:.2rem;}
+    .cal-daynum{font-size:.66rem;}
+    .cal-events{gap:.16rem;}
+    .cal-event{
+      font-size:.62rem; line-height:1.25; padding:.16rem .3rem;
+      white-space:normal; overflow-wrap:break-word;
+      display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+    }
+    .cal-event .cal-event-dot{margin-top:.15rem; align-self:flex-start;}
+    .cal-legend{font-size:.7rem; gap:.8rem;}
+  }
+
+  @media (max-width:480px){
+    .cal-head span{font-size:.52rem;}
+    .cal-cell{min-height:58px;}
+    .cal-daynum{font-size:.6rem;}
+    .cal-event{font-size:.56rem; padding:.14rem .24rem;}
   }
 
   .table-scroll{max-height:560px; overflow:auto; border:1px solid var(--border-soft); border-radius:10px;}
-  table.bookings{width:100%; border-collapse:collapse; min-width:720px; font-size:.83rem;}
+  table.bookings{width:100%; border-collapse:collapse; min-width:720px; font-size:.83rem; table-layout:auto;}
   table.bookings thead th{
     position:sticky; top:0; z-index:1;
     background:var(--surface-alt);
@@ -765,6 +783,36 @@
   table.bookings tbody tr:hover td{background:var(--surface-alt);}
   table.bookings .venues-cell{color:var(--ink-soft); font-size:.78rem;}
   table.bookings .row-hidden{display:none;}
+
+  /* ---------- Bookings table -> stacked cards on phones ---------- */
+  @media (max-width:680px){
+    .table-scroll{max-height:none; overflow:visible; border:none; border-radius:0;}
+    table.bookings{min-width:0; width:100%; border-collapse:separate; border-spacing:0 0 .7rem; font-size:.86rem;}
+    table.bookings thead{
+      position:absolute; width:1px; height:1px; overflow:hidden;
+      clip:rect(0,0,0,0); white-space:nowrap; border:0; padding:0; margin:-1px;
+    }
+    table.bookings tbody, table.bookings tr, table.bookings td{display:block; width:auto;}
+    table.bookings tbody tr{
+      background:var(--surface); border:1px solid var(--border-soft); border-radius:12px;
+      padding:.85rem 1rem; margin-bottom:.75rem; box-shadow:var(--shadow);
+    }
+    table.bookings tbody tr:hover td{background:transparent;}
+    table.bookings td{
+      padding:.4rem 0; border-bottom:1px dashed var(--border-soft); text-align:left;
+      white-space:normal;
+    }
+    table.bookings td:last-child{border-bottom:none; padding-bottom:0;}
+    table.bookings td.num{text-align:left; font-variant-numeric:tabular-nums;}
+    table.bookings td[data-label]::before{
+      content: attr(data-label);
+      display:block; font-size:.64rem; font-weight:700; letter-spacing:.05em;
+      text-transform:uppercase; color:var(--ink-faint); margin-bottom:.18rem;
+    }
+    table.bookings td.row-actions{padding-top:.6rem; display:flex; gap:.5rem;}
+    table.bookings td.row-actions .row-btn{flex:1 1 auto;}
+    table.bookings td.row-actions-empty{display:none;}
+  }
 
   /* ---------- Save bar ---------- */
   .save-bar{display:flex; align-items:center; gap:.9rem; padding-top:.25rem;}
@@ -885,7 +933,8 @@
 
   <div class="auth-bar no-print" id="auth-bar">
     <span id="auth-status">Checking sign-in&hellip;</span>
-    <button type="button" id="auth-login-btn" class="row-btn" style="display:none;">Log in / Sign up</button>
+    <button type="button" id="auth-login-btn" class="row-btn" style="display:none;">Log in / Create code</button>
+    <button type="button" id="auth-changecode-btn" class="row-btn" style="display:none;">Change my code</button>
     <button type="button" id="auth-signout-btn" class="row-btn" style="display:none;">Sign out</button>
   </div>
 
@@ -951,7 +1000,7 @@
       <span class="mark">II.</span>
       <h2>All Bookings</h2>
       <button type="button" class="tag trash-btn no-print" id="trash-open-btn" title="View deleted bookings" style="cursor:pointer; margin-left:.5rem; display:none;">&#128465; Trash<span id="trash-count-badge"></span></button>
-      <button type="button" class="tag users-btn no-print" id="users-open-btn" title="See who has signed up" style="cursor:pointer; margin-left:.5rem; display:none;">&#128100; Users</button>
+      <button type="button" class="tag users-btn no-print" id="users-open-btn" title="See who has an access code" style="cursor:pointer; margin-left:.5rem; display:none;">&#128100; Users</button>
       <span class="tag" id="live-indicator"><span class="live-dot" id="live-dot"></span> <span id="live-text">Connecting&hellip;</span></span>
     </div>
     <div class="section-body">
@@ -1403,22 +1452,22 @@
     <div class="modal-header">
       <div>
         <h3 id="auth-modal-title">Log in</h3>
-        <div class="modal-sub">Viewing the dashboard never needs an account &mdash; only adding or editing bookings does.</div>
+        <div class="modal-sub">Viewing the dashboard never needs a code &mdash; only adding or editing bookings does.</div>
       </div>
       <button type="button" class="modal-close" id="auth-modal-close" aria-label="Close">&times;</button>
     </div>
     <div class="modal-body">
-      <div class="field" style="margin-bottom:.7rem;">
-        <label for="auth-email">Email</label>
-        <input type="email" id="auth-email" autocomplete="username" placeholder="you@example.com">
+      <div class="field" id="auth-name-field" style="margin-bottom:.7rem; display:none;">
+        <label for="auth-name">Your name</label>
+        <input type="text" id="auth-name" autocomplete="off" placeholder="e.g. Fon">
       </div>
       <div class="field" style="margin-bottom:.4rem;">
-        <label for="auth-password">Password</label>
-        <input type="password" id="auth-password" autocomplete="current-password" placeholder="At least 6 characters">
+        <label for="auth-code" id="auth-code-label">Your access code</label>
+        <input type="text" id="auth-code" autocomplete="off" autocapitalize="characters" placeholder="4 letters + 4 digits" style="letter-spacing:.06em;">
       </div>
       <p class="save-msg" id="auth-msg" style="min-height:1.2em;"></p>
       <div class="save-bar no-print" style="justify-content:space-between; flex-wrap:wrap; margin-top:.5rem;">
-        <button type="button" id="auth-toggle-mode" class="row-btn" style="padding:.6rem 1rem;">Need an account? Sign up</button>
+        <button type="button" id="auth-toggle-mode" class="row-btn" style="padding:.6rem 1rem;">New here? Create your code</button>
         <button type="button" id="auth-submit" class="save-btn">Log in</button>
       </div>
     </div>
@@ -1430,7 +1479,7 @@
     <div class="modal-header">
       <div>
         <h3 id="users-modal-title">Users</h3>
-        <div class="modal-sub">Everyone who has signed up to edit this dashboard.</div>
+        <div class="modal-sub">Everyone who has created their own access code.</div>
       </div>
       <button type="button" class="modal-close" id="users-modal-close" aria-label="Close">&times;</button>
     </div>
@@ -1604,39 +1653,46 @@
     ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
     : null;
 
-  /* ================= AUTH (login required to edit; admin-only to delete) ================= */
-  var CURRENT_SESSION = null;
-  var CURRENT_PROFILE = null;
+  /* ================= ACCESS (simple shared passcode — no email/account needed) ================= */
+  var ACCESS_ROLE = null;   // null | 'staff' | 'admin'
+  var ACCESS_CODE = null;   // this person's own code; resent with every write so the server re-checks it every time
+  var ACCESS_NAME = null;   // this person's own name
+  var ACCESS_ID = null;
+  var ACCESS_STORAGE_KEY = 'thavorn_access_code_v1';
   var authMode = 'signin';
 
-  function isLoggedIn(){ return !!CURRENT_SESSION; }
-  function isAdmin(){ return !!(CURRENT_PROFILE && CURRENT_PROFILE.role === 'admin'); }
-  function currentUserLabel(){
-    return (CURRENT_PROFILE && CURRENT_PROFILE.email) || (CURRENT_SESSION && CURRENT_SESSION.user && CURRENT_SESSION.user.email) || '';
+  function isLoggedIn(){ return !!ACCESS_ROLE; }
+  function isAdmin(){ return ACCESS_ROLE === 'admin'; }
+
+  function applyAccountResult(acct){
+    ACCESS_ID = acct.id;
+    ACCESS_NAME = acct.name;
+    ACCESS_ROLE = acct.role;
+  }
+
+  function clearAccessSession(){
+    ACCESS_ID = null; ACCESS_NAME = null; ACCESS_ROLE = null; ACCESS_CODE = null;
+    try { sessionStorage.removeItem(ACCESS_STORAGE_KEY); } catch(e){}
   }
 
   function initAuth(){
     if (!supabaseClient){ updateAuthUI(); return; }
-    supabaseClient.auth.getSession().then(function(res){
-      CURRENT_SESSION = (res.data && res.data.session) ? res.data.session : null;
-      loadProfileAndRender();
-    });
-    supabaseClient.auth.onAuthStateChange(function(_event, session){
-      CURRENT_SESSION = session;
-      loadProfileAndRender();
-    });
-  }
-
-  function loadProfileAndRender(){
-    if (!CURRENT_SESSION){
-      CURRENT_PROFILE = null;
+    var saved = null;
+    try { saved = sessionStorage.getItem(ACCESS_STORAGE_KEY); } catch(e){}
+    if (!saved){
       updateAuthUI();
       renderAll();
       renderTrashBadge();
       return;
     }
-    supabaseClient.from('profiles').select('id,email,role').eq('id', CURRENT_SESSION.user.id).single().then(function(res){
-      CURRENT_PROFILE = (res && res.data) ? res.data : {id: CURRENT_SESSION.user.id, email: CURRENT_SESSION.user.email, role: 'staff'};
+    supabaseClient.rpc('check_code', {input_code: saved}).then(function(res){
+      var acct = (res && !res.error) ? res.data : null;
+      if (acct){
+        applyAccountResult(acct);
+        ACCESS_CODE = saved;
+      } else {
+        clearAccessSession();
+      }
       updateAuthUI();
       renderAll();
       renderTrashBadge();
@@ -1646,17 +1702,19 @@
   function updateAuthUI(){
     var statusEl = document.getElementById('auth-status');
     var loginBtn = document.getElementById('auth-login-btn');
+    var changeBtn = document.getElementById('auth-changecode-btn');
     var signoutBtn = document.getElementById('auth-signout-btn');
     var trashBtn = document.getElementById('trash-open-btn');
     var usersBtn = document.getElementById('users-open-btn');
     if (statusEl){
       if (isLoggedIn()){
-        statusEl.innerHTML = 'Signed in as ' + escapeHtml(currentUserLabel()) + (isAdmin() ? '<span class="role-tag">Admin</span>' : '<span class="role-tag" style="background:var(--surface-alt); color:var(--ink-faint);">Staff</span>');
+        statusEl.innerHTML = escapeHtml(ACCESS_NAME || '') + (isAdmin() ? '<span class="role-tag">Admin</span>' : '<span class="role-tag" style="background:var(--surface-alt); color:var(--ink-faint);">Staff</span>');
       } else {
-        statusEl.textContent = 'Viewing only — log in to add or edit bookings.';
+        statusEl.textContent = 'Viewing only — log in (or create your own code) to add or edit bookings.';
       }
     }
     if (loginBtn) loginBtn.style.display = isLoggedIn() ? 'none' : '';
+    if (changeBtn) changeBtn.style.display = isLoggedIn() ? '' : 'none';
     if (signoutBtn) signoutBtn.style.display = isLoggedIn() ? '' : 'none';
     if (trashBtn) trashBtn.style.display = isAdmin() ? '' : 'none';
     if (usersBtn) usersBtn.style.display = isAdmin() ? '' : 'none';
@@ -1666,15 +1724,39 @@
     }
   }
 
+  function setAuthMode(mode){
+    authMode = mode;
+    var title = document.getElementById('auth-modal-title');
+    var nameField = document.getElementById('auth-name-field');
+    var codeLabel = document.getElementById('auth-code-label');
+    var submit = document.getElementById('auth-submit');
+    var toggle = document.getElementById('auth-toggle-mode');
+    if (mode === 'signup'){
+      title.textContent = 'Create your access code';
+      nameField.style.display = '';
+      codeLabel.textContent = 'Choose a code (4 letters + 4 digits)';
+      submit.textContent = 'Create code';
+      toggle.textContent = 'Already have a code? Log in';
+    } else {
+      title.textContent = 'Log in';
+      nameField.style.display = 'none';
+      codeLabel.textContent = 'Your access code';
+      submit.textContent = 'Log in';
+      toggle.textContent = 'New here? Create your code';
+    }
+  }
+
   function openAuthModal(){
     var overlay = document.getElementById('auth-modal');
     if (!overlay) return;
     document.getElementById('auth-msg').textContent = '';
     document.getElementById('auth-msg').className = 'save-msg';
+    setFieldVal('auth-name', '');
+    setFieldVal('auth-code', '');
     setAuthMode('signin');
     overlay.classList.remove('hidden');
     overlay.setAttribute('aria-hidden', 'false');
-    setTimeout(function(){ document.getElementById('auth-email').focus(); }, 30);
+    setTimeout(function(){ document.getElementById('auth-code').focus(); }, 30);
   }
 
   function closeAuthModal(){
@@ -1682,22 +1764,6 @@
     if (!overlay) return;
     overlay.classList.add('hidden');
     overlay.setAttribute('aria-hidden', 'true');
-  }
-
-  function setAuthMode(mode){
-    authMode = mode;
-    var title = document.getElementById('auth-modal-title');
-    var submit = document.getElementById('auth-submit');
-    var toggle = document.getElementById('auth-toggle-mode');
-    if (mode === 'signup'){
-      title.textContent = 'Create account';
-      submit.textContent = 'Sign up';
-      toggle.textContent = 'Already have an account? Log in';
-    } else {
-      title.textContent = 'Log in';
-      submit.textContent = 'Log in';
-      toggle.textContent = "Need an account? Sign up";
-    }
   }
 
   function wireAuthModal(){
@@ -1713,43 +1779,95 @@
       setAuthMode(authMode === 'signin' ? 'signup' : 'signin');
     });
     document.getElementById('auth-signout-btn').addEventListener('click', function(){
-      if (!supabaseClient) return;
-      supabaseClient.auth.signOut();
+      clearAccessSession();
+      updateAuthUI();
+      renderAll();
+      renderTrashBadge();
     });
-    document.getElementById('auth-submit').addEventListener('click', function(){
+    document.getElementById('auth-changecode-btn').addEventListener('click', function(){
+      if (!ACCESS_CODE) return;
+      askConfirm({
+        title: 'Change my code',
+        message: 'Choose a new access code (4 letters + 4 digits). You’ll use this instead of your old one from now on.',
+        confirmLabel: 'Save new code',
+        needsInput: true,
+        inputPlaceholder: 'e.g. FONX2026'
+      }).then(function(newCode){
+        if (!newCode) return;
+        supabaseClient.rpc('change_my_code', {access_code: ACCESS_CODE, new_code: newCode}).then(function(res){
+          if (res.error){ notify(res.error.message || 'Couldn’t update your code — please try again.', 'Error'); return; }
+          ACCESS_CODE = newCode;
+          try { sessionStorage.setItem(ACCESS_STORAGE_KEY, newCode); } catch(e){}
+          notify('Your code has been updated. Remember it for next time!', 'Saved');
+        });
+      });
+    });
+    function submitCode(){
       if (!supabaseClient) return;
-      var email = fieldVal('auth-email').trim();
-      var password = fieldVal('auth-password');
+      var code = fieldVal('auth-code').trim();
       var msgEl = document.getElementById('auth-msg');
-      if (!email || !password){
-        msgEl.textContent = 'Please enter an email and password.';
+      if (!code){
+        msgEl.textContent = 'Please enter an access code.';
         msgEl.className = 'save-msg err';
         return;
       }
-      msgEl.textContent = authMode === 'signup' ? 'Creating account…' : 'Logging in…';
-      msgEl.className = 'save-msg';
-      var action = authMode === 'signup'
-        ? supabaseClient.auth.signUp({email: email, password: password})
-        : supabaseClient.auth.signInWithPassword({email: email, password: password});
-      action.then(function(res){
-        if (res.error){
-          msgEl.textContent = res.error.message || 'Something went wrong — please try again.';
+      if (authMode === 'signup'){
+        var name = fieldVal('auth-name').trim();
+        if (!name){
+          msgEl.textContent = 'Please enter your name.';
           msgEl.className = 'save-msg err';
           return;
         }
-        if (authMode === 'signup' && res.data && !res.data.session){
-          msgEl.textContent = 'Account created — check your email to confirm, then log in.';
+        msgEl.textContent = 'Creating your code…';
+        msgEl.className = 'save-msg';
+        supabaseClient.rpc('signup_staff_account', {person_name: name, new_code: code}).then(function(res){
+          if (res.error){
+            msgEl.textContent = res.error.message || 'Something went wrong — please try again.';
+            msgEl.className = 'save-msg err';
+            return;
+          }
+          applyAccountResult(res.data);
+          ACCESS_CODE = code;
+          try { sessionStorage.setItem(ACCESS_STORAGE_KEY, code); } catch(e){}
+          msgEl.textContent = 'Your code is ready — remember it for next time!';
           msgEl.className = 'save-msg ok';
-          return;
-        }
-        msgEl.textContent = 'Signed in.';
-        msgEl.className = 'save-msg ok';
-        setTimeout(closeAuthModal, 400);
-      });
+          updateAuthUI();
+          renderAll();
+          renderTrashBadge();
+          setTimeout(closeAuthModal, 500);
+        });
+      } else {
+        msgEl.textContent = 'Checking…';
+        msgEl.className = 'save-msg';
+        supabaseClient.rpc('login_with_code', {input_code: code}).then(function(res){
+          var acct = (res && !res.error) ? res.data : null;
+          if (!acct){
+            msgEl.textContent = 'That code isn’t right — check with your manager, or create a new code if you’re new here.';
+            msgEl.className = 'save-msg err';
+            return;
+          }
+          applyAccountResult(acct);
+          ACCESS_CODE = code;
+          try { sessionStorage.setItem(ACCESS_STORAGE_KEY, code); } catch(e){}
+          msgEl.textContent = 'Signed in.';
+          msgEl.className = 'save-msg ok';
+          updateAuthUI();
+          renderAll();
+          renderTrashBadge();
+          setTimeout(closeAuthModal, 400);
+        });
+      }
+    }
+    document.getElementById('auth-submit').addEventListener('click', submitCode);
+    document.getElementById('auth-code').addEventListener('keydown', function(ev){
+      if (ev.key === 'Enter'){ ev.preventDefault(); submitCode(); }
+    });
+    document.getElementById('auth-name').addEventListener('keydown', function(ev){
+      if (ev.key === 'Enter'){ ev.preventDefault(); submitCode(); }
     });
   }
 
-  /* ================= USERS (admin-only directory of everyone who has signed up) ================= */
+  /* ================= USERS (admin-only: see everyone with a code, promote/demote, reset a locked code) ================= */
   function openUsersModal(){
     var overlay = document.getElementById('users-modal');
     if (!overlay || !isAdmin()) return;
@@ -1775,29 +1893,30 @@
 
   function renderUsersModal(){
     var body = document.getElementById('users-modal-body');
-    if (!body || !supabaseClient) return;
+    if (!body || !supabaseClient || !ACCESS_CODE) return;
     body.innerHTML = '<p class="venue-empty-note">Loading…</p>';
-    supabaseClient.rpc('admin_list_users').then(function(res){
+    supabaseClient.rpc('admin_list_accounts', {access_code: ACCESS_CODE}).then(function(res){
       if (res.error){
         body.innerHTML = '<p class="venue-empty-note">Couldn’t load the user list.</p>';
         return;
       }
       var users = res.data || [];
       if (users.length === 0){
-        body.innerHTML = '<p class="venue-empty-note">No one has signed up yet.</p>';
+        body.innerHTML = '<p class="venue-empty-note">No one has created a code yet.</p>';
         return;
       }
       body.innerHTML = users.map(function(u){
-        var isSelf = CURRENT_SESSION && u.id === CURRENT_SESSION.user.id;
+        var isSelf = u.id === ACCESS_ID;
         return '<div class="trash-row" data-id="'+escapeHtml(u.id)+'">' +
-          '<span class="tr-name">'+escapeHtml(u.email)+'</span>' +
+          '<span class="tr-name">'+escapeHtml(u.name)+'</span>' +
           '<span class="tag-type '+(u.role === 'admin' ? 'wedding' : 'mice')+'">'+escapeHtml(u.role)+'</span>' +
           '<span class="tr-actions">' +
             (isSelf ? '' : '<button type="button" class="row-btn row-role" data-id="'+escapeHtml(u.id)+'" data-role="'+(u.role === 'admin' ? 'staff' : 'admin')+'">'+(u.role === 'admin' ? 'Demote to Staff' : 'Make Admin')+'</button>') +
+            '<button type="button" class="row-btn row-reset" data-id="'+escapeHtml(u.id)+'" data-name="'+escapeHtml(u.name)+'">Reset code</button>' +
           '</span>' +
           '<span class="tr-meta">' +
             '<span>joined '+fmtUserDate(u.created_at)+'</span>' +
-            '<span>&middot; last login '+fmtUserDate(u.last_sign_in_at)+'</span>' +
+            '<span>&middot; last login '+fmtUserDate(u.last_login_at)+'</span>' +
           '</span>' +
         '</div>';
       }).join('');
@@ -1819,14 +1938,32 @@
     if (body){
       body.addEventListener('click', function(ev){
         var roleBtn = ev.target.closest ? ev.target.closest('.row-role') : null;
-        if (!roleBtn) return;
-        var targetId = roleBtn.getAttribute('data-id');
-        var newRole = roleBtn.getAttribute('data-role');
-        roleBtn.disabled = true;
-        supabaseClient.rpc('admin_set_role', {target_id: targetId, new_role: newRole}).then(function(res){
-          if (res.error){ notify('Couldn’t change that user’s role — please try again.', 'Error'); roleBtn.disabled = false; return; }
-          renderUsersModal();
-        });
+        var resetBtn = ev.target.closest ? ev.target.closest('.row-reset') : null;
+        if (roleBtn){
+          var targetId = roleBtn.getAttribute('data-id');
+          var newRole = roleBtn.getAttribute('data-role');
+          roleBtn.disabled = true;
+          supabaseClient.rpc('admin_set_account_role', {access_code: ACCESS_CODE, target_id: targetId, new_role: newRole}).then(function(res){
+            if (res.error){ notify('Couldn’t change that user’s role — please try again.', 'Error'); roleBtn.disabled = false; return; }
+            renderUsersModal();
+          });
+        } else if (resetBtn){
+          var resetId = resetBtn.getAttribute('data-id');
+          var personName = resetBtn.getAttribute('data-name');
+          askConfirm({
+            title: 'Reset code',
+            message: 'Set a new code for ' + personName + ' (4 letters + 4 digits). Tell them the new code so they can log in.',
+            confirmLabel: 'Set new code',
+            needsInput: true,
+            inputPlaceholder: 'e.g. FONX2026'
+          }).then(function(newCode){
+            if (!newCode) return;
+            supabaseClient.rpc('admin_reset_account_code', {access_code: ACCESS_CODE, target_id: resetId, new_code: newCode}).then(function(res){
+              if (res.error){ notify(res.error.message || 'Couldn’t reset that code — please try again.', 'Error'); return; }
+              notify(personName + '’s new code is ' + newCode + '. Share it with them now.', 'Code reset');
+            });
+          });
+        }
       });
     }
   }
@@ -2167,7 +2304,7 @@
       delBtn.disabled = true;
       msgEl.textContent = 'Saving…';
       msgEl.className = 'save-msg';
-      supabaseClient.from('bookings').update(row).eq('id', editingId).then(function(res){
+      supabaseClient.rpc('code_update_booking', {access_code: ACCESS_CODE, booking_id: editingId, payload: row}).then(function(res){
         saveBtn.disabled = false;
         delBtn.disabled = false;
         if (res.error){
@@ -2198,7 +2335,7 @@
         delBtn.disabled = true;
         msgEl.textContent = 'Moving to Trash…';
         msgEl.className = 'save-msg';
-        supabaseClient.from('bookings').update({deleted_at: new Date().toISOString(), deleted_by: currentUserLabel()}).eq('id', thisEditingId).then(function(res){
+        supabaseClient.rpc('code_soft_delete_booking', {access_code: ACCESS_CODE, booking_id: thisEditingId}).then(function(res){
           saveBtn.disabled = false;
           delBtn.disabled = false;
           if (res.error){
@@ -2222,7 +2359,7 @@
       danger: true
     }).then(function(ok){
       if (!ok) return;
-      supabaseClient.from('bookings').update({deleted_at: new Date().toISOString(), deleted_by: currentUserLabel()}).eq('id', b.id).then(function(res){
+      supabaseClient.rpc('code_soft_delete_booking', {access_code: ACCESS_CODE, booking_id: b.id}).then(function(res){
         if (res.error){ notify('Couldn’t delete that booking — please try again.', 'Error'); return; }
         fetchBookings();
       });
@@ -2293,7 +2430,7 @@
 
   function restoreBooking(id){
     if (!supabaseClient || !id) return;
-    supabaseClient.from('bookings').update({deleted_at: null, deleted_by: null}).eq('id', id).then(function(res){
+    supabaseClient.rpc('code_restore_booking', {access_code: ACCESS_CODE, booking_id: id}).then(function(res){
       if (res.error){ notify('Couldn’t restore that booking — please try again.', 'Error'); return; }
       fetchBookings();
     });
@@ -2308,7 +2445,7 @@
       danger: true
     }).then(function(ok){
       if (!ok) return;
-      supabaseClient.from('bookings').delete().eq('id', id).then(function(res){
+      supabaseClient.rpc('code_purge_booking', {access_code: ACCESS_CODE, booking_id: id}).then(function(res){
         if (res.error){ notify('Couldn’t permanently delete that booking — please try again.', 'Error'); return; }
         fetchBookings();
       });
@@ -2452,16 +2589,16 @@
         (canDelete ? '<button type="button" class="row-btn row-del" data-id="'+escapeHtml(b.id)+'">Delete</button>' : '');
       var actionsCell = actionBtns
         ? '<td class="row-actions no-print">'+actionBtns+'</td>'
-        : '<td class="row-actions no-print"><span class="venues-cell">&mdash;</span></td>';
+        : '<td class="row-actions row-actions-empty no-print"><span class="venues-cell">&mdash;</span></td>';
       var refTitle = [b.preparedBy ? ('Prepared by '+b.preparedBy) : '', b.dateRaised ? ('Raised '+b.dateRaised) : ''].filter(Boolean).join(' · ');
-      tr.innerHTML = '<td class="num">'+b.date+'</td>' +
-        '<td class="venues-cell" title="'+escapeHtml(refTitle)+'">'+(b.referenceNo ? escapeHtml(b.referenceNo) : '—')+'</td>' +
-        '<td>'+escapeHtml(b.eventName)+(b.source==='form'?'<span class="tag-new">NEW</span>':'')+(b.by ? '<br><span class="venues-cell">by '+escapeHtml(b.by)+'</span>' : '')+'</td>' +
-        '<td><span class="tag-type '+b.section.toLowerCase()+'">'+b.section+'</span></td>' +
-        '<td><span class="status-dot '+b.status.toLowerCase()+'"></span>'+b.status+'</td>' +
-        '<td class="num">'+(b.pax || '\u2014')+'</td>' +
-        '<td class="venues-cell">'+((b.venues&&b.venues.length) ? escapeHtml(b.venues.join(', ')) : '<em>TBA</em>')+'</td>' +
-        '<td class="num">'+(b.revenue ? fmtTHB(b.revenue) : '\u2014')+'</td>' +
+      tr.innerHTML = '<td class="num" data-label="Date">'+b.date+'</td>' +
+        '<td class="venues-cell" data-label="Ref. No." title="'+escapeHtml(refTitle)+'">'+(b.referenceNo ? escapeHtml(b.referenceNo) : '—')+'</td>' +
+        '<td data-label="Event">'+escapeHtml(b.eventName)+(b.source==='form'?'<span class="tag-new">NEW</span>':'')+(b.by ? '<br><span class="venues-cell">by '+escapeHtml(b.by)+'</span>' : '')+'</td>' +
+        '<td data-label="Type"><span class="tag-type '+b.section.toLowerCase()+'">'+b.section+'</span></td>' +
+        '<td data-label="Status"><span class="status-dot '+b.status.toLowerCase()+'"></span>'+b.status+'</td>' +
+        '<td class="num" data-label="Pax">'+(b.pax || '\u2014')+'</td>' +
+        '<td class="venues-cell" data-label="Venue(s)">'+((b.venues&&b.venues.length) ? escapeHtml(b.venues.join(', ')) : '<em>TBA</em>')+'</td>' +
+        '<td class="num" data-label="Revenue (THB)">'+(b.revenue ? fmtTHB(b.revenue) : '\u2014')+'</td>' +
         actionsCell;
       tbody.appendChild(tr);
     });
@@ -2520,7 +2657,7 @@
       (byDay[dayNum] || []).forEach(function(b){
         var ev = document.createElement('div');
         var canEdit = !!(supabaseClient && b.id && isLoggedIn());
-        ev.className = 'cal-event' + (canEdit ? ' cal-event-editable' : '');
+        ev.className = 'cal-event sec-' + b.section.toLowerCase() + (canEdit ? ' cal-event-editable' : '');
         ev.title = b.eventName + ' \u2014 ' + b.section + ' \u2014 ' + b.status + (b.venues&&b.venues.length ? ' \u2014 '+b.venues.join(', ') : '') + (canEdit ? ' \u2014 click to edit' : '');
         ev.innerHTML = '<span class="cal-event-dot status-dot '+b.status.toLowerCase()+'"></span>'+escapeHtml(b.eventName);
         if (canEdit){
@@ -2798,7 +2935,7 @@
 
     btn.disabled = true;
     msgEl.textContent = 'Saving\u2026';
-    supabaseClient.from('bookings').insert(row).then(function(res){
+    supabaseClient.rpc('code_insert_booking', {access_code: ACCESS_CODE, payload: row}).then(function(res){
       if (res.error){
         msgEl.textContent = 'Couldn\u2019t save that booking \u2014 please try again.';
         msgEl.className = 'save-msg err';
