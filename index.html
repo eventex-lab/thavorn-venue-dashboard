@@ -779,7 +779,17 @@
   .save-msg.ok{color:var(--def-fg); font-weight:600;}
   .save-msg.err{color:var(--lost-fg); font-weight:600;}
 
-  button.trash-btn{font:inherit; background:var(--surface); cursor:pointer;}
+  .auth-bar{
+    display:flex; align-items:center; gap:.7rem; flex-wrap:wrap;
+    margin:.6rem 0 1.1rem; font-size:.8rem; color:var(--ink-soft);
+  }
+  .auth-bar #auth-status{flex:1 1 auto;}
+  .auth-bar .role-tag{
+    font-size:.66rem; font-weight:700; letter-spacing:.05em; text-transform:uppercase;
+    background:var(--accent-soft); color:var(--accent); border-radius:100px; padding:.1rem .5rem; margin-left:.4rem;
+  }
+  button.trash-btn, button.users-btn{font:inherit; background:var(--surface); cursor:pointer;}
+  button.users-btn:hover{border-color:var(--accent); color:var(--accent);}
   button.trash-btn:hover{border-color:var(--lost-fg); color:var(--lost-fg);}
   #trash-count-badge:empty{display:none;}
   #trash-count-badge{
@@ -873,6 +883,12 @@
     </div>
   </header>
 
+  <div class="auth-bar no-print" id="auth-bar">
+    <span id="auth-status">Checking sign-in&hellip;</span>
+    <button type="button" id="auth-login-btn" class="row-btn" style="display:none;">Log in / Sign up</button>
+    <button type="button" id="auth-signout-btn" class="row-btn" style="display:none;">Sign out</button>
+  </div>
+
   <nav class="jumpnav no-print" aria-label="Section jump links">
     <a href="#dashboard">Dashboard</a>
     <a href="#by-venue">By venue</a>
@@ -934,7 +950,8 @@
     <div class="section-head">
       <span class="mark">II.</span>
       <h2>All Bookings</h2>
-      <button type="button" class="tag trash-btn no-print" id="trash-open-btn" title="View deleted bookings" style="cursor:pointer; margin-left:.5rem;">&#128465; Trash<span id="trash-count-badge"></span></button>
+      <button type="button" class="tag trash-btn no-print" id="trash-open-btn" title="View deleted bookings" style="cursor:pointer; margin-left:.5rem; display:none;">&#128465; Trash<span id="trash-count-badge"></span></button>
+      <button type="button" class="tag users-btn no-print" id="users-open-btn" title="See who has signed up" style="cursor:pointer; margin-left:.5rem; display:none;">&#128100; Users</button>
       <span class="tag" id="live-indicator"><span class="live-dot" id="live-dot"></span> <span id="live-text">Connecting&hellip;</span></span>
     </div>
     <div class="section-body">
@@ -1381,6 +1398,46 @@
   </div>
 </div>
 
+<div class="modal-overlay hidden no-print" id="auth-modal" aria-hidden="true">
+  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title" style="width:min(380px, 100%);">
+    <div class="modal-header">
+      <div>
+        <h3 id="auth-modal-title">Log in</h3>
+        <div class="modal-sub">Viewing the dashboard never needs an account &mdash; only adding or editing bookings does.</div>
+      </div>
+      <button type="button" class="modal-close" id="auth-modal-close" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="field" style="margin-bottom:.7rem;">
+        <label for="auth-email">Email</label>
+        <input type="email" id="auth-email" autocomplete="username" placeholder="you@example.com">
+      </div>
+      <div class="field" style="margin-bottom:.4rem;">
+        <label for="auth-password">Password</label>
+        <input type="password" id="auth-password" autocomplete="current-password" placeholder="At least 6 characters">
+      </div>
+      <p class="save-msg" id="auth-msg" style="min-height:1.2em;"></p>
+      <div class="save-bar no-print" style="justify-content:space-between; flex-wrap:wrap; margin-top:.5rem;">
+        <button type="button" id="auth-toggle-mode" class="row-btn" style="padding:.6rem 1rem;">Need an account? Sign up</button>
+        <button type="button" id="auth-submit" class="save-btn">Log in</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden no-print" id="users-modal" aria-hidden="true">
+  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="users-modal-title">
+    <div class="modal-header">
+      <div>
+        <h3 id="users-modal-title">Users</h3>
+        <div class="modal-sub">Everyone who has signed up to edit this dashboard.</div>
+      </div>
+      <button type="button" class="modal-close" id="users-modal-close" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body" id="users-modal-body"></div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 (function(){
@@ -1546,6 +1603,234 @@
   var supabaseClient = (window.supabase && typeof window.supabase.createClient === 'function')
     ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
     : null;
+
+  /* ================= AUTH (login required to edit; admin-only to delete) ================= */
+  var CURRENT_SESSION = null;
+  var CURRENT_PROFILE = null;
+  var authMode = 'signin';
+
+  function isLoggedIn(){ return !!CURRENT_SESSION; }
+  function isAdmin(){ return !!(CURRENT_PROFILE && CURRENT_PROFILE.role === 'admin'); }
+  function currentUserLabel(){
+    return (CURRENT_PROFILE && CURRENT_PROFILE.email) || (CURRENT_SESSION && CURRENT_SESSION.user && CURRENT_SESSION.user.email) || '';
+  }
+
+  function initAuth(){
+    if (!supabaseClient){ updateAuthUI(); return; }
+    supabaseClient.auth.getSession().then(function(res){
+      CURRENT_SESSION = (res.data && res.data.session) ? res.data.session : null;
+      loadProfileAndRender();
+    });
+    supabaseClient.auth.onAuthStateChange(function(_event, session){
+      CURRENT_SESSION = session;
+      loadProfileAndRender();
+    });
+  }
+
+  function loadProfileAndRender(){
+    if (!CURRENT_SESSION){
+      CURRENT_PROFILE = null;
+      updateAuthUI();
+      renderAll();
+      renderTrashBadge();
+      return;
+    }
+    supabaseClient.from('profiles').select('id,email,role').eq('id', CURRENT_SESSION.user.id).single().then(function(res){
+      CURRENT_PROFILE = (res && res.data) ? res.data : {id: CURRENT_SESSION.user.id, email: CURRENT_SESSION.user.email, role: 'staff'};
+      updateAuthUI();
+      renderAll();
+      renderTrashBadge();
+    });
+  }
+
+  function updateAuthUI(){
+    var statusEl = document.getElementById('auth-status');
+    var loginBtn = document.getElementById('auth-login-btn');
+    var signoutBtn = document.getElementById('auth-signout-btn');
+    var trashBtn = document.getElementById('trash-open-btn');
+    var usersBtn = document.getElementById('users-open-btn');
+    if (statusEl){
+      if (isLoggedIn()){
+        statusEl.innerHTML = 'Signed in as ' + escapeHtml(currentUserLabel()) + (isAdmin() ? '<span class="role-tag">Admin</span>' : '<span class="role-tag" style="background:var(--surface-alt); color:var(--ink-faint);">Staff</span>');
+      } else {
+        statusEl.textContent = 'Viewing only — log in to add or edit bookings.';
+      }
+    }
+    if (loginBtn) loginBtn.style.display = isLoggedIn() ? 'none' : '';
+    if (signoutBtn) signoutBtn.style.display = isLoggedIn() ? '' : 'none';
+    if (trashBtn) trashBtn.style.display = isAdmin() ? '' : 'none';
+    if (usersBtn) usersBtn.style.display = isAdmin() ? '' : 'none';
+    if (!isAdmin()){
+      closeTrashModal();
+      closeUsersModal();
+    }
+  }
+
+  function openAuthModal(){
+    var overlay = document.getElementById('auth-modal');
+    if (!overlay) return;
+    document.getElementById('auth-msg').textContent = '';
+    document.getElementById('auth-msg').className = 'save-msg';
+    setAuthMode('signin');
+    overlay.classList.remove('hidden');
+    overlay.setAttribute('aria-hidden', 'false');
+    setTimeout(function(){ document.getElementById('auth-email').focus(); }, 30);
+  }
+
+  function closeAuthModal(){
+    var overlay = document.getElementById('auth-modal');
+    if (!overlay) return;
+    overlay.classList.add('hidden');
+    overlay.setAttribute('aria-hidden', 'true');
+  }
+
+  function setAuthMode(mode){
+    authMode = mode;
+    var title = document.getElementById('auth-modal-title');
+    var submit = document.getElementById('auth-submit');
+    var toggle = document.getElementById('auth-toggle-mode');
+    if (mode === 'signup'){
+      title.textContent = 'Create account';
+      submit.textContent = 'Sign up';
+      toggle.textContent = 'Already have an account? Log in';
+    } else {
+      title.textContent = 'Log in';
+      submit.textContent = 'Log in';
+      toggle.textContent = "Need an account? Sign up";
+    }
+  }
+
+  function wireAuthModal(){
+    var overlay = document.getElementById('auth-modal');
+    if (!overlay) return;
+    document.getElementById('auth-login-btn').addEventListener('click', openAuthModal);
+    document.getElementById('auth-modal-close').addEventListener('click', closeAuthModal);
+    overlay.addEventListener('click', function(ev){ if (ev.target === overlay) closeAuthModal(); });
+    document.addEventListener('keydown', function(ev){
+      if (ev.key === 'Escape' && !overlay.classList.contains('hidden')) closeAuthModal();
+    });
+    document.getElementById('auth-toggle-mode').addEventListener('click', function(){
+      setAuthMode(authMode === 'signin' ? 'signup' : 'signin');
+    });
+    document.getElementById('auth-signout-btn').addEventListener('click', function(){
+      if (!supabaseClient) return;
+      supabaseClient.auth.signOut();
+    });
+    document.getElementById('auth-submit').addEventListener('click', function(){
+      if (!supabaseClient) return;
+      var email = fieldVal('auth-email').trim();
+      var password = fieldVal('auth-password');
+      var msgEl = document.getElementById('auth-msg');
+      if (!email || !password){
+        msgEl.textContent = 'Please enter an email and password.';
+        msgEl.className = 'save-msg err';
+        return;
+      }
+      msgEl.textContent = authMode === 'signup' ? 'Creating account…' : 'Logging in…';
+      msgEl.className = 'save-msg';
+      var action = authMode === 'signup'
+        ? supabaseClient.auth.signUp({email: email, password: password})
+        : supabaseClient.auth.signInWithPassword({email: email, password: password});
+      action.then(function(res){
+        if (res.error){
+          msgEl.textContent = res.error.message || 'Something went wrong — please try again.';
+          msgEl.className = 'save-msg err';
+          return;
+        }
+        if (authMode === 'signup' && res.data && !res.data.session){
+          msgEl.textContent = 'Account created — check your email to confirm, then log in.';
+          msgEl.className = 'save-msg ok';
+          return;
+        }
+        msgEl.textContent = 'Signed in.';
+        msgEl.className = 'save-msg ok';
+        setTimeout(closeAuthModal, 400);
+      });
+    });
+  }
+
+  /* ================= USERS (admin-only directory of everyone who has signed up) ================= */
+  function openUsersModal(){
+    var overlay = document.getElementById('users-modal');
+    if (!overlay || !isAdmin()) return;
+    renderUsersModal();
+    overlay.classList.remove('hidden');
+    overlay.setAttribute('aria-hidden', 'false');
+  }
+
+  function closeUsersModal(){
+    var overlay = document.getElementById('users-modal');
+    if (!overlay) return;
+    overlay.classList.add('hidden');
+    overlay.setAttribute('aria-hidden', 'true');
+  }
+
+  function fmtUserDate(iso){
+    if (!iso) return 'never';
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return String(iso);
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return d.getDate() + ' ' + months[d.getMonth()] + ' ' + String(d.getFullYear()).slice(2);
+  }
+
+  function renderUsersModal(){
+    var body = document.getElementById('users-modal-body');
+    if (!body || !supabaseClient) return;
+    body.innerHTML = '<p class="venue-empty-note">Loading…</p>';
+    supabaseClient.rpc('admin_list_users').then(function(res){
+      if (res.error){
+        body.innerHTML = '<p class="venue-empty-note">Couldn’t load the user list.</p>';
+        return;
+      }
+      var users = res.data || [];
+      if (users.length === 0){
+        body.innerHTML = '<p class="venue-empty-note">No one has signed up yet.</p>';
+        return;
+      }
+      body.innerHTML = users.map(function(u){
+        var isSelf = CURRENT_SESSION && u.id === CURRENT_SESSION.user.id;
+        return '<div class="trash-row" data-id="'+escapeHtml(u.id)+'">' +
+          '<span class="tr-name">'+escapeHtml(u.email)+'</span>' +
+          '<span class="tag-type '+(u.role === 'admin' ? 'wedding' : 'mice')+'">'+escapeHtml(u.role)+'</span>' +
+          '<span class="tr-actions">' +
+            (isSelf ? '' : '<button type="button" class="row-btn row-role" data-id="'+escapeHtml(u.id)+'" data-role="'+(u.role === 'admin' ? 'staff' : 'admin')+'">'+(u.role === 'admin' ? 'Demote to Staff' : 'Make Admin')+'</button>') +
+          '</span>' +
+          '<span class="tr-meta">' +
+            '<span>joined '+fmtUserDate(u.created_at)+'</span>' +
+            '<span>&middot; last login '+fmtUserDate(u.last_sign_in_at)+'</span>' +
+          '</span>' +
+        '</div>';
+      }).join('');
+    });
+  }
+
+  function wireUsersModal(){
+    var overlay = document.getElementById('users-modal');
+    var openBtn = document.getElementById('users-open-btn');
+    if (!overlay) return;
+    if (openBtn) openBtn.addEventListener('click', openUsersModal);
+    var closeBtn = document.getElementById('users-modal-close');
+    if (closeBtn) closeBtn.addEventListener('click', closeUsersModal);
+    overlay.addEventListener('click', function(ev){ if (ev.target === overlay) closeUsersModal(); });
+    document.addEventListener('keydown', function(ev){
+      if (ev.key === 'Escape' && !overlay.classList.contains('hidden')) closeUsersModal();
+    });
+    var body = document.getElementById('users-modal-body');
+    if (body){
+      body.addEventListener('click', function(ev){
+        var roleBtn = ev.target.closest ? ev.target.closest('.row-role') : null;
+        if (!roleBtn) return;
+        var targetId = roleBtn.getAttribute('data-id');
+        var newRole = roleBtn.getAttribute('data-role');
+        roleBtn.disabled = true;
+        supabaseClient.rpc('admin_set_role', {target_id: targetId, new_role: newRole}).then(function(res){
+          if (res.error){ notify('Couldn’t change that user’s role — please try again.', 'Error'); roleBtn.disabled = false; return; }
+          renderUsersModal();
+        });
+      });
+    }
+  }
+
   var CAL_MIN_YEAR = 2026, CAL_MAX_YEAR = 2030;
   var calMonthIndex = 0;
   var calYear = CAL_MIN_YEAR;
@@ -1808,7 +2093,7 @@
     var saveBtn = document.getElementById('em-save');
     var delBtn = document.getElementById('em-delete');
     if (saveBtn) saveBtn.disabled = false;
-    if (delBtn) delBtn.disabled = false;
+    if (delBtn){ delBtn.disabled = false; delBtn.style.display = isAdmin() ? '' : 'none'; }
     var overlay = document.getElementById('edit-modal');
     overlay.classList.remove('hidden');
     overlay.setAttribute('aria-hidden', 'false');
@@ -1905,17 +2190,15 @@
       askConfirm({
         title: 'Move to Trash',
         message: 'Move "' + label + '" to Trash? You can restore it later.',
-        needsInput: true,
-        inputPlaceholder: 'Your name or initials',
         confirmLabel: 'Move to Trash',
         danger: true
-      }).then(function(who){
-        if (!who) return;
+      }).then(function(ok){
+        if (!ok) return;
         saveBtn.disabled = true;
         delBtn.disabled = true;
         msgEl.textContent = 'Moving to Trash…';
         msgEl.className = 'save-msg';
-        supabaseClient.from('bookings').update({deleted_at: new Date().toISOString(), deleted_by: who}).eq('id', thisEditingId).then(function(res){
+        supabaseClient.from('bookings').update({deleted_at: new Date().toISOString(), deleted_by: currentUserLabel()}).eq('id', thisEditingId).then(function(res){
           saveBtn.disabled = false;
           delBtn.disabled = false;
           if (res.error){
@@ -1935,13 +2218,11 @@
     askConfirm({
       title: 'Move to Trash',
       message: 'Move "' + b.eventName + ' — ' + b.date + '" to Trash? You can restore it later.',
-      needsInput: true,
-      inputPlaceholder: 'Your name or initials',
       confirmLabel: 'Move to Trash',
       danger: true
-    }).then(function(who){
-      if (!who) return;
-      supabaseClient.from('bookings').update({deleted_at: new Date().toISOString(), deleted_by: who}).eq('id', b.id).then(function(res){
+    }).then(function(ok){
+      if (!ok) return;
+      supabaseClient.from('bookings').update({deleted_at: new Date().toISOString(), deleted_by: currentUserLabel()}).eq('id', b.id).then(function(res){
         if (res.error){ notify('Couldn’t delete that booking — please try again.', 'Error'); return; }
         fetchBookings();
       });
@@ -2165,9 +2446,12 @@
     tbody.innerHTML = '';
     rows.forEach(function(b){
       var tr = document.createElement('tr');
-      var canEdit = !!(supabaseClient && b.id);
-      var actionsCell = canEdit
-        ? '<td class="row-actions no-print"><button type="button" class="row-btn row-edit" data-id="'+escapeHtml(b.id)+'">Edit</button><button type="button" class="row-btn row-del" data-id="'+escapeHtml(b.id)+'">Delete</button></td>'
+      var canEdit = !!(supabaseClient && b.id && isLoggedIn());
+      var canDelete = !!(supabaseClient && b.id && isAdmin());
+      var actionBtns = (canEdit ? '<button type="button" class="row-btn row-edit" data-id="'+escapeHtml(b.id)+'">Edit</button>' : '') +
+        (canDelete ? '<button type="button" class="row-btn row-del" data-id="'+escapeHtml(b.id)+'">Delete</button>' : '');
+      var actionsCell = actionBtns
+        ? '<td class="row-actions no-print">'+actionBtns+'</td>'
         : '<td class="row-actions no-print"><span class="venues-cell">&mdash;</span></td>';
       var refTitle = [b.preparedBy ? ('Prepared by '+b.preparedBy) : '', b.dateRaised ? ('Raised '+b.dateRaised) : ''].filter(Boolean).join(' · ');
       tr.innerHTML = '<td class="num">'+b.date+'</td>' +
@@ -2235,7 +2519,7 @@
       evWrap.className = 'cal-events';
       (byDay[dayNum] || []).forEach(function(b){
         var ev = document.createElement('div');
-        var canEdit = !!(supabaseClient && b.id);
+        var canEdit = !!(supabaseClient && b.id && isLoggedIn());
         ev.className = 'cal-event' + (canEdit ? ' cal-event-editable' : '');
         ev.title = b.eventName + ' \u2014 ' + b.section + ' \u2014 ' + b.status + (b.venues&&b.venues.length ? ' \u2014 '+b.venues.join(', ') : '') + (canEdit ? ' \u2014 click to edit' : '');
         ev.innerHTML = '<span class="cal-event-dot status-dot '+b.status.toLowerCase()+'"></span>'+escapeHtml(b.eventName);
@@ -2338,9 +2622,12 @@
     wireEditModal();
     wireTrashModal();
     wireConfirmModal();
+    wireAuthModal();
+    wireUsersModal();
     renderAll();
     initDb();
     wireSaveButtons();
+    initAuth();
   });
 
   /* ================= LIVE DB (Supabase) ================= */
@@ -2425,6 +2712,12 @@
   function saveBooking(kind, btn, msgEl){
     msgEl.textContent = '';
     msgEl.className = 'save-msg';
+    if (!isLoggedIn()){
+      msgEl.textContent = 'Please log in to add or edit bookings.';
+      msgEl.className = 'save-msg err';
+      openAuthModal();
+      return;
+    }
     var data;
     if (kind === 'wedding'){
       var dp = dateParts(fieldVal('wd-date'));
