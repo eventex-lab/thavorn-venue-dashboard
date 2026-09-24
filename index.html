@@ -34,6 +34,7 @@
     --lost-fg:#9C453D; --lost-bg:#F3DFDC;
     --td-fg:#54524C;   --td-bg:#E7E4DC;
     --rose-fg:#9C4F72; --rose-bg:#F3E1EA;
+    --internal-fg:#4E4A93; --internal-bg:#E7E5F5;
 
     --shadow: 0 1px 2px rgba(15,45,42,0.06), 0 8px 24px -12px rgba(15,45,42,0.18);
   }
@@ -63,6 +64,7 @@
       --lost-fg:#E9A79E; --lost-bg:#42221E;
       --td-fg:#C9C6BB;   --td-bg:#302E27;
       --rose-fg:#E3A0C0; --rose-bg:#3B2231;
+      --internal-fg:#C7C1EF; --internal-bg:#2C2850;
 
       --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 12px 28px -14px rgba(0,0,0,0.55);
     }
@@ -91,6 +93,7 @@
     --lost-fg:#E9A79E; --lost-bg:#42221E;
     --td-fg:#C9C6BB;   --td-bg:#302E27;
     --rose-fg:#E3A0C0; --rose-bg:#3B2231;
+    --internal-fg:#C7C1EF; --internal-bg:#2C2850;
 
     --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 12px 28px -14px rgba(0,0,0,0.55);
   }
@@ -521,6 +524,7 @@
   .tag-type.wedding{background:var(--gold-soft); color:var(--gold-ink);}
   .tag-type.mice{background:var(--accent-soft); color:var(--accent-ink);}
   .tag-type.romantic{background:var(--rose-bg); color:var(--rose-fg);}
+  .tag-type.internal{background:var(--internal-bg); color:var(--internal-fg);}
 
   .status-dot{display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:.35rem; vertical-align:middle;}
   .status-dot.inq{background:var(--inq-fg);}
@@ -715,6 +719,7 @@
   .cal-dot.wedding{background:var(--gold);}
   .cal-dot.mice{background:var(--accent);}
   .cal-dot.romantic{background:var(--rose-fg);}
+  .cal-dot.internal{background:var(--internal-fg);}
   .cal-head{display:grid; grid-template-columns:repeat(7,1fr); gap:1px; background:var(--border-soft); border:1px solid var(--border-soft); border-radius:8px 8px 0 0; overflow:hidden;}
   .cal-head span{background:var(--surface-alt); color:var(--ink-faint); font-size:.68rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; text-align:center; padding:.45rem 0;}
   .cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:1px; background:var(--border-soft); border:1px solid var(--border-soft); border-top:none; border-radius:0 0 8px 8px; overflow:hidden;}
@@ -736,6 +741,7 @@
   .cal-event.sec-wedding{background:var(--gold-soft); color:var(--gold-ink);}
   .cal-event.sec-mice{background:var(--accent-soft); color:var(--accent-ink);}
   .cal-event.sec-romantic{background:var(--rose-bg); color:var(--rose-fg);}
+  .cal-event.sec-internal{background:var(--internal-bg); color:var(--internal-fg);}
   .cal-empty-month{padding:2rem; text-align:center; color:var(--ink-faint); font-size:.85rem;}
 
   @media (max-width:640px){
@@ -924,7 +930,7 @@
     <div class="brand-block">
       <span class="eyebrow">Thavorn Beach Village &amp; Spa &middot; Events &amp; Weddings</span>
       <h1>Venue Reservation Record</h1>
-      <p class="sub">Booking intake for Wedding, MICE &amp; Romantic Dining events &mdash; 2026&ndash;2030. One record per enquiry, carried through to Definite.</p>
+      <p class="sub">Booking intake for Wedding, MICE, Romantic Dining &amp; Hotel Internal events &mdash; 2026&ndash;2030. One record per enquiry, carried through to Definite.</p>
     </div>
   </header>
 
@@ -942,6 +948,7 @@
     <a href="#wedding">New wedding</a>
     <a href="#mice">New MICE</a>
     <a href="#romantic">New Romantic</a>
+    <a href="#internal">New Hotel Internal</a>
   </nav>
 
   <section class="legend" aria-label="Status legend">
@@ -973,7 +980,7 @@
 
   <div class="chart-card">
     <h3>Pipeline by status</h3>
-    <p class="chart-sub">All logged Wedding, MICE &amp; Romantic Dining records, 2026&ndash;2030, by sales stage.</p>
+    <p class="chart-sub">All logged Wedding, MICE, Romantic Dining &amp; Hotel Internal records, 2026&ndash;2030, by sales stage.</p>
     <div class="funnel-row" id="funnel-row"></div>
   </div>
 
@@ -1009,6 +1016,7 @@
           <option value="Wedding">Wedding</option>
           <option value="MICE">MICE</option>
           <option value="Romantic">Romantic Dining</option>
+          <option value="Internal">Hotel Internal</option>
         </select>
         <select id="bk-month-filter">
           <option value="">All months</option>
@@ -1048,6 +1056,7 @@
           <span class="lg-item"><span class="cal-dot wedding"></span> Wedding</span>
           <span class="lg-item"><span class="cal-dot mice"></span> MICE</span>
           <span class="lg-item"><span class="cal-dot romantic"></span> Romantic Dining</span>
+          <span class="lg-item"><span class="cal-dot internal"></span> Hotel Internal</span>
         </div>
         <div class="cal-head" id="cal-head"></div>
         <div class="cal-grid" id="cal-grid"></div>
@@ -1330,6 +1339,62 @@
       <div class="save-bar no-print">
         <button type="button" class="save-btn" id="ro-save">Save booking &amp; add to dashboard</button>
         <span class="save-msg" id="ro-save-msg"></span>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="section" id="internal" data-kind="internal">
+    <div class="section-head">
+      <span class="mark">VI.</span>
+      <h2>Hotel Internal Booking</h2>
+      <span class="tag">Staff &amp; Departmental Use &middot; No Revenue</span>
+    </div>
+    <div class="section-body">
+
+      <div>
+        <span class="block-label">Booking details</span>
+        <div class="field-grid">
+          <div class="field"><label for="in-date">Date</label><input type="date" id="in-date"></div>
+          <div class="field wide"><label for="in-event-name">Event name</label><input type="text" id="in-event-name" placeholder="e.g. Staff Party, Training Session"></div>
+          <div class="field"><label for="in-by">Department / Requested by</label><input type="text" id="in-by" placeholder="e.g. HR, F&amp;B, Housekeeping"></div>
+          <div class="field"><label for="in-pax">Total of guest (pax)</label><input type="number" min="0" id="in-pax"></div>
+          <div class="field"><label for="in-cutoff">Cut-off date</label><input type="date" id="in-cutoff"></div>
+        </div>
+      </div>
+
+      <div>
+        <span class="block-label">Document reference</span>
+        <div class="field-grid">
+          <div class="field"><label for="in-ref">Reference No.</label><input type="text" id="in-ref" placeholder="TBV-26-___"></div>
+          <div class="field"><label for="in-prepared-by">Prepared by</label><input type="text" id="in-prepared-by" placeholder="initials"></div>
+          <div class="field"><label for="in-date-raised">Date raised</label><input type="date" id="in-date-raised"></div>
+        </div>
+      </div>
+
+      <div>
+        <span class="block-label">Status</span>
+        <div class="status-picker" role="radiogroup" aria-label="Hotel internal booking status">
+          <label><input type="radio" name="in-status" value="INQ" checked><span>INQ</span></label>
+          <label><input type="radio" name="in-status" value="PROS"><span>PROS</span></label>
+          <label><input type="radio" name="in-status" value="TEN"><span>TEN</span></label>
+          <label><input type="radio" name="in-status" value="DEF"><span>DEF</span></label>
+          <label><input type="radio" name="in-status" value="CXL"><span>CXL</span></label>
+          <label><input type="radio" name="in-status" value="LOST"><span>LOST</span></label>
+          <label><input type="radio" name="in-status" value="TD"><span>TD</span></label>
+        </div>
+      </div>
+
+      <div>
+        <span class="block-label">Venue assignment</span>
+        <div class="field-grid">
+          <div class="field"><label for="in-venue">Venue</label><select id="in-venue" class="venue-select"><option value="">Select venue&hellip;</option></select></div>
+        </div>
+      </div>
+
+      <div class="save-bar no-print">
+        <button type="button" class="save-btn" id="in-save">Save booking &amp; add to dashboard</button>
+        <span class="save-msg" id="in-save-msg"></span>
       </div>
 
     </div>
@@ -2017,8 +2082,10 @@
     var wedCount = BOOKINGS.filter(function(b){return b.section==='Wedding';}).length;
     var miceCount = BOOKINGS.filter(function(b){return b.section==='MICE';}).length;
     var romCount = BOOKINGS.filter(function(b){return b.section==='Romantic';}).length;
+    var internalCount = BOOKINGS.filter(function(b){return b.section==='Internal';}).length;
+    var loggedSub = wedCount+' wedding \u00b7 '+miceCount+' MICE \u00b7 '+romCount+' dining' + (internalCount ? ' \u00b7 '+internalCount+' internal' : '');
     var kpis = [
-      {label:'Logged bookings', value:String(totalBookings), sub: wedCount+' wedding \u00b7 '+miceCount+' MICE \u00b7 '+romCount+' dining'},
+      {label:'Logged bookings', value:String(totalBookings), sub: loggedSub},
       {label:'Confirmed weddings (sheet)', value:String(YEAR.noWedding), sub: YEAR.pax.toLocaleString('en-US')+' guests total'},
       {label:'OTB revenue booked', value:fmtTHB(YEAR.otbTotalRev), sub: pctOfBudget.toFixed(1)+'% of 2026 budget'},
       {label:'2026 budget target', value:fmtTHB(YEAR.budget), sub: fmtTHB(YEAR.otbVsBudget)+' to go', cls:'neg'},
@@ -2835,12 +2902,15 @@
     var wdBtn = document.getElementById('wd-save');
     var miBtn = document.getElementById('mi-save');
     var roBtn = document.getElementById('ro-save');
+    var inBtn = document.getElementById('in-save');
     if (wdBtn) wdBtn.addEventListener('click', function(){ saveBooking('wedding', wdBtn, document.getElementById('wd-save-msg')); });
     if (miBtn) miBtn.addEventListener('click', function(){ saveBooking('mice', miBtn, document.getElementById('mi-save-msg')); });
     if (roBtn) roBtn.addEventListener('click', function(){ saveBooking('romantic', roBtn, document.getElementById('ro-save-msg')); });
+    if (inBtn) inBtn.addEventListener('click', function(){ saveBooking('internal', inBtn, document.getElementById('in-save-msg')); });
     setFieldVal('wd-date-raised', todayISO());
     setFieldVal('mi-date-raised', todayISO());
     setFieldVal('ro-date-raised', todayISO());
+    setFieldVal('in-date-raised', todayISO());
   }
 
   function saveBooking(kind, btn, msgEl){
@@ -2893,7 +2963,7 @@
         referenceNo: fieldVal('mi-ref').trim(), preparedBy: fieldVal('mi-prepared-by').trim(), dateRaised: fieldVal('mi-date-raised'),
         source: 'form', createdAt: new Date().toISOString()
       };
-    } else {
+    } else if (kind === 'romantic'){
       var dp3 = dateParts(fieldVal('ro-date'));
       var name3 = fieldVal('ro-event-name').trim();
       if (!dp3 || !name3){
@@ -2911,6 +2981,26 @@
         revenue: tableTotal('table[data-group="ro-rev"]'),
         venues: venues3, package: '',
         referenceNo: fieldVal('ro-ref').trim(), preparedBy: fieldVal('ro-prepared-by').trim(), dateRaised: fieldVal('ro-date-raised'),
+        source: 'form', createdAt: new Date().toISOString()
+      };
+    } else {
+      var dp4 = dateParts(fieldVal('in-date'));
+      var name4 = fieldVal('in-event-name').trim();
+      if (!dp4 || !name4){
+        msgEl.textContent = 'Please fill in the date and event name first.';
+        msgEl.className = 'save-msg err';
+        return;
+      }
+      var statusEl4 = document.querySelector('input[name="in-status"]:checked');
+      var venues4 = [fieldVal('in-venue')].filter(Boolean);
+      data = {
+        month: dp4.month, date: dp4.disp, dateSort: dp4.sort,
+        eventName: name4, by: fieldVal('in-by').trim(),
+        section: 'Internal', status: statusEl4 ? statusEl4.value : 'INQ',
+        pax: fieldVal('in-pax'), cutoff: fieldVal('in-cutoff'),
+        revenue: null,
+        venues: venues4, package: '',
+        referenceNo: fieldVal('in-ref').trim(), preparedBy: fieldVal('in-prepared-by').trim(), dateRaised: fieldVal('in-date-raised'),
         source: 'form', createdAt: new Date().toISOString()
       };
     }
