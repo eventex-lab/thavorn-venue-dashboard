@@ -3047,13 +3047,19 @@
         setFieldVal('mi-ref',''); setFieldVal('mi-prepared-by',''); setFieldVal('mi-date-raised', todayISO());
         var inqMi = document.querySelector('input[name="mi-status"][value="INQ"]'); if (inqMi) inqMi.checked = true;
         resetRevTable('table[data-group="mi-rev"]');
-      } else {
+      } else if (kind === 'romantic'){
         setFieldVal('ro-date',''); setFieldVal('ro-event-name',''); setFieldVal('ro-by','');
         setFieldVal('ro-pax',''); setFieldVal('ro-cutoff','');
         setFieldVal('ro-venue','');
         setFieldVal('ro-ref',''); setFieldVal('ro-prepared-by',''); setFieldVal('ro-date-raised', todayISO());
         var inqRo = document.querySelector('input[name="ro-status"][value="INQ"]'); if (inqRo) inqRo.checked = true;
         resetRevTable('table[data-group="ro-rev"]');
+      } else {
+        setFieldVal('in-date',''); setFieldVal('in-event-name',''); setFieldVal('in-by','');
+        setFieldVal('in-pax',''); setFieldVal('in-cutoff','');
+        setFieldVal('in-venue','');
+        setFieldVal('in-ref',''); setFieldVal('in-prepared-by',''); setFieldVal('in-date-raised', todayISO());
+        var inqIn = document.querySelector('input[name="in-status"][value="INQ"]'); if (inqIn) inqIn.checked = true;
       }
     });
   }
