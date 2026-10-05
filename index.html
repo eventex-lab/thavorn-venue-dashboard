@@ -648,6 +648,20 @@
     font-size:.85rem;
   }
   .modal-event-row:last-child{border-bottom:none;}
+  /* ---------- Calendar day detail ---------- */
+  .cal-cell:not(.blank){cursor:pointer;}
+  .cal-cell:not(.blank):hover{background:var(--surface-alt);}
+  .cal-cell:not(.blank):focus-visible{outline:2px solid var(--accent); outline-offset:-2px;}
+  .day-card{padding:.85rem 0; border-bottom:1px solid var(--border-soft);}
+  .day-card:last-child{border-bottom:none;}
+  .day-card-top{display:flex; flex-wrap:wrap; align-items:center; gap:.5rem;}
+  .day-card-name{font-weight:600; color:var(--ink); font-size:.92rem; flex:1 1 160px;}
+  .day-card-status{font-size:.75rem; color:var(--ink-soft); display:flex; align-items:center; gap:.35rem;}
+  .day-card dl{display:grid; grid-template-columns:max-content 1fr; gap:.25rem .9rem; margin:.6rem 0 0; font-size:.8rem;}
+  .day-card dt{color:var(--ink-faint);}
+  .day-card dd{margin:0; color:var(--ink); overflow-wrap:anywhere;}
+  .day-card .day-edit-btn{margin-top:.65rem;}
+  .day-empty{color:var(--ink-faint); font-size:.88rem; padding:1rem 0;}
   .modal-event-row .me-date{font-family:'IBM Plex Mono', monospace; font-size:.75rem; color:var(--ink-faint); white-space:nowrap; min-width:5.4rem;}
   .modal-event-row .me-name{color:var(--ink); font-weight:600; flex:1 1 160px;}
   .modal-event-row .me-meta{font-size:.75rem; color:var(--ink-soft); width:100%; display:flex; flex-wrap:wrap; gap:.5rem; align-items:center;}
@@ -1417,6 +1431,19 @@
       <button type="button" class="modal-close" id="venue-modal-close" aria-label="Close">&times;</button>
     </div>
     <div class="modal-body" id="venue-modal-body"></div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden no-print" id="day-modal" aria-hidden="true">
+  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="day-modal-title">
+    <div class="modal-header">
+      <div>
+        <h3 id="day-modal-title">Day</h3>
+        <div class="modal-sub" id="day-modal-sub"></div>
+      </div>
+      <button type="button" class="modal-close" id="day-modal-close" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body" id="day-modal-body"></div>
   </div>
 </div>
 
@@ -2251,6 +2278,68 @@
     });
   }
 
+  /* ================= CALENDAR DAY DETAIL MODAL ================= */
+  var STATUS_FULL = {INQ:'New Inquiry', PROS:'Prospect', TEN:'Tentative', DEF:'Definite', CXL:'Cancelled', LOST:'Lost', TD:'Turned Down'};
+  function openDayModal(year, monthIndex, day, items){
+    var overlay = document.getElementById('day-modal');
+    if (!overlay) return;
+    var d = new Date(year, monthIndex, day);
+    document.getElementById('day-modal-title').textContent = d.toLocaleDateString('en-US', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+    document.getElementById('day-modal-sub').textContent = items.length === 0 ? 'No bookings on this day' : items.length + (items.length === 1 ? ' booking' : ' bookings');
+    var body = document.getElementById('day-modal-body');
+    if (items.length === 0){
+      body.innerHTML = '<p class="day-empty">No bookings logged for this day.</p>';
+    } else {
+      var canEdit = !!(supabaseClient && isLoggedIn());
+      body.innerHTML = items.map(function(b, i){
+        var rows = [];
+        function row(k, v){ if (v) rows.push('<dt>'+k+'</dt><dd>'+v+'</dd>'); }
+        row('Venue(s)', (b.venues && b.venues.length) ? escapeHtml(b.venues.join(', ')) : '');
+        row('Guests (pax)', b.pax ? escapeHtml(String(b.pax)) : '');
+        row('Cut-off date', b.cutoff ? escapeHtml(String(b.cutoff)) : '');
+        row('Revenue', b.revenue ? fmtTHB(b.revenue) : '');
+        row('Requested by', b.by ? escapeHtml(b.by) : '');
+        row('Ref. No.', b.referenceNo ? escapeHtml(b.referenceNo) : '');
+        row('Prepared by', b.preparedBy ? escapeHtml(b.preparedBy) : '');
+        row('Date raised', b.dateRaised ? escapeHtml(String(b.dateRaised)) : '');
+        var editBtn = (canEdit && b.id) ? '<button type="button" class="row-btn day-edit-btn" data-day-edit="'+i+'">Edit booking</button>' : '';
+        return '<div class="day-card">' +
+          '<div class="day-card-top">' +
+            '<span class="day-card-name">'+escapeHtml(b.eventName)+'</span>' +
+            '<span class="tag-type '+b.section.toLowerCase()+'">'+escapeHtml(b.section)+'</span>' +
+            '<span class="day-card-status"><span class="status-dot '+b.status.toLowerCase()+'"></span>'+b.status+' &middot; '+(STATUS_FULL[b.status]||'')+'</span>' +
+          '</div>' +
+          (rows.length ? '<dl>'+rows.join('')+'</dl>' : '') +
+          editBtn +
+        '</div>';
+      }).join('');
+      body.querySelectorAll('[data-day-edit]').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          var b = items[parseInt(btn.getAttribute('data-day-edit'), 10)];
+          closeDayModal();
+          if (b) openEditModal(b);
+        });
+      });
+    }
+    overlay.classList.remove('hidden');
+    overlay.setAttribute('aria-hidden', 'false');
+  }
+  function closeDayModal(){
+    var overlay = document.getElementById('day-modal');
+    if (!overlay) return;
+    overlay.classList.add('hidden');
+    overlay.setAttribute('aria-hidden', 'true');
+  }
+  function wireDayModal(){
+    var overlay = document.getElementById('day-modal');
+    if (!overlay) return;
+    document.getElementById('day-modal-close').addEventListener('click', closeDayModal);
+    overlay.addEventListener('click', function(ev){ if (ev.target === overlay) closeDayModal(); });
+    document.addEventListener('keydown', function(ev){
+      if (ev.key === 'Escape' && !overlay.classList.contains('hidden')) closeDayModal();
+    });
+  }
+
   /* ================= EDIT / DELETE BOOKING MODAL ================= */
   var editingId = null;
 
@@ -2712,6 +2801,14 @@
         continue;
       }
       cell.className = 'cal-cell' + (isCurrentMonth && dayNum === today.getDate() ? ' today' : '');
+      cell.tabIndex = 0;
+      cell.setAttribute('role', 'button');
+      (function(d){
+        var openIt = function(){ openDayModal(year, calMonthIndex, d, byDay[d] || []); };
+        cell.setAttribute('aria-label', new Date(year, calMonthIndex, d).toLocaleDateString('en-US', {weekday:'long', day:'numeric', month:'long', year:'numeric'}) + ' — ' + (byDay[d] ? byDay[d].length : 0) + ' booking(s). Open day details');
+        cell.addEventListener('click', openIt);
+        cell.addEventListener('keydown', function(e){ if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openIt(); } });
+      })(dayNum);
       var dn = document.createElement('div');
       dn.className = 'cal-daynum';
       dn.textContent = String(dayNum);
@@ -2720,13 +2817,10 @@
       evWrap.className = 'cal-events';
       (byDay[dayNum] || []).forEach(function(b){
         var ev = document.createElement('div');
-        var canEdit = !!(supabaseClient && b.id && isLoggedIn());
-        ev.className = 'cal-event sec-' + b.section.toLowerCase() + (canEdit ? ' cal-event-editable' : '');
-        ev.title = b.eventName + ' \u2014 ' + b.section + ' \u2014 ' + b.status + (b.venues&&b.venues.length ? ' \u2014 '+b.venues.join(', ') : '') + (canEdit ? ' \u2014 click to edit' : '');
+        ev.className = 'cal-event sec-' + b.section.toLowerCase() + ' cal-event-editable';
+        ev.title = b.eventName + ' \u2014 ' + b.section + ' \u2014 ' + b.status + (b.venues&&b.venues.length ? ' \u2014 '+b.venues.join(', ') : '') + ' \u2014 click for day details';
         ev.innerHTML = '<span class="cal-event-dot status-dot '+b.status.toLowerCase()+'"></span>'+escapeHtml(b.eventName);
-        if (canEdit){
-          ev.addEventListener('click', function(ev2){ ev2.stopPropagation(); openEditModal(b); });
-        }
+        /* clicking a chip bubbles up to the day cell, which opens the day-detail modal */
         evWrap.appendChild(ev);
       });
       cell.appendChild(evWrap);
@@ -2820,6 +2914,7 @@
     }
 
     wireVenueModal();
+    wireDayModal();
     wireEditModal();
     wireTrashModal();
     wireConfirmModal();
