@@ -849,6 +849,10 @@
     margin:.6rem 0 1.1rem; font-size:.8rem; color:var(--ink-soft);
   }
   .auth-bar #auth-status{flex:1 1 auto;}
+  .online-badge{display:inline-flex; align-items:center; gap:.4rem;}
+  .online-dot{display:inline-block; width:.55rem; height:.55rem; border-radius:50%; background:#2f9e62; box-shadow:0 0 0 3px rgba(47,158,98,.2);}
+  .tr-online{font-size:.72rem; font-weight:600; color:#2f9e62; display:inline-flex; align-items:center; gap:.3rem;}
+  .tr-online .online-dot{width:.45rem; height:.45rem; box-shadow:none;}
   .auth-bar .role-tag{
     font-size:.66rem; font-weight:700; letter-spacing:.05em; text-transform:uppercase;
     background:var(--accent-soft); color:var(--accent); border-radius:100px; padding:.1rem .5rem; margin-left:.4rem;
@@ -950,6 +954,7 @@
 
   <div class="auth-bar no-print" id="auth-bar">
     <span id="auth-status">Checking sign-in&hellip;</span>
+    <button type="button" id="online-badge" class="row-btn online-badge" style="display:none;" title="Who is logged in right now"><span class="online-dot"></span><span id="online-count">0 online</span></button>
     <button type="button" id="auth-login-btn" class="row-btn" style="display:none;">Log in / Create code</button>
     <button type="button" id="auth-changecode-btn" class="row-btn" style="display:none;">Change my code</button>
     <button type="button" id="auth-signout-btn" class="row-btn" style="display:none;">Sign out</button>
@@ -1811,6 +1816,71 @@
       closeTrashModal();
       closeUsersModal();
     }
+    syncPresenceTrack();
+    updatePresenceUI();
+  }
+
+  /* ================= WHO IS ONLINE (Supabase Realtime Presence) =================
+     Every logged-in browser tab announces itself on the 'online-users' channel; only Admins see the list. */
+  var presenceChannel = null;
+  var presenceReady = false;
+  var presenceKey = 'tab-' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+  var ONLINE = {};   // account id -> {name, role, tabs}
+
+  function initPresence(){
+    if (!supabaseClient || presenceChannel) return;
+    try {
+      presenceChannel = supabaseClient.channel('online-users', {config:{presence:{key: presenceKey}}});
+      presenceChannel
+        .on('presence', {event:'sync'}, function(){ readPresence(); updatePresenceUI(); })
+        .subscribe(function(status){
+          presenceReady = (status === 'SUBSCRIBED');
+          if (presenceReady) syncPresenceTrack();
+        });
+    } catch(e){ presenceChannel = null; }
+  }
+
+  function syncPresenceTrack(){
+    if (!presenceChannel || !presenceReady) return;
+    try {
+      if (isLoggedIn()){
+        presenceChannel.track({id: ACCESS_ID, name: ACCESS_NAME, role: ACCESS_ROLE, since: new Date().toISOString()});
+      } else {
+        presenceChannel.untrack();
+      }
+    } catch(e){}
+  }
+
+  function readPresence(){
+    ONLINE = {};
+    if (!presenceChannel) return;
+    var state = presenceChannel.presenceState() || {};
+    Object.keys(state).forEach(function(k){
+      (state[k] || []).forEach(function(m){
+        if (!m || !m.id) return;
+        var o = ONLINE[m.id] = ONLINE[m.id] || {name: m.name, role: m.role, tabs: 0};
+        o.tabs++;
+      });
+    });
+  }
+
+  function updatePresenceUI(){
+    var badge = document.getElementById('online-badge');
+    if (badge){
+      var ids = Object.keys(ONLINE);
+      badge.style.display = isAdmin() ? '' : 'none';
+      var cnt = document.getElementById('online-count');
+      if (cnt) cnt.textContent = ids.length + ' online';
+      badge.title = ids.length ? ('Logged in now: ' + ids.map(function(i){ return ONLINE[i].name + ' (' + ONLINE[i].role + ')'; }).join(', ')) : 'No one is logged in right now';
+    }
+    refreshOnlineMarks();
+  }
+
+  function refreshOnlineMarks(){
+    var marks = document.querySelectorAll('.tr-online[data-id]');
+    for (var i = 0; i < marks.length; i++){
+      marks[i].style.display = (isAdmin() && ONLINE[marks[i].getAttribute('data-id')]) ? '' : 'none';
+    }
   }
 
   function setAuthMode(mode){
@@ -1999,6 +2069,7 @@
         return '<div class="trash-row" data-id="'+escapeHtml(u.id)+'">' +
           '<span class="tr-name">'+escapeHtml(u.name)+'</span>' +
           '<span class="tag-type '+(u.role === 'admin' ? 'wedding' : 'mice')+'">'+escapeHtml(u.role)+'</span>' +
+          '<span class="tr-online" data-id="'+escapeHtml(u.id)+'" style="display:none;"><span class="online-dot"></span>online now</span>' +
           '<span class="tr-actions">' +
             (isSelf ? '' : '<button type="button" class="row-btn row-role" data-id="'+escapeHtml(u.id)+'" data-role="'+(u.role === 'admin' ? 'staff' : 'admin')+'">'+(u.role === 'admin' ? 'Demote to Staff' : 'Make Admin')+'</button>') +
             '<button type="button" class="row-btn row-reset" data-id="'+escapeHtml(u.id)+'" data-name="'+escapeHtml(u.name)+'">Reset code</button>' +
@@ -2009,6 +2080,7 @@
           '</span>' +
         '</div>';
       }).join('');
+      refreshOnlineMarks();
     });
   }
 
@@ -2017,6 +2089,8 @@
     var openBtn = document.getElementById('users-open-btn');
     if (!overlay) return;
     if (openBtn) openBtn.addEventListener('click', openUsersModal);
+    var onlineBadge = document.getElementById('online-badge');
+    if (onlineBadge) onlineBadge.addEventListener('click', openUsersModal);
     var closeBtn = document.getElementById('users-modal-close');
     if (closeBtn) closeBtn.addEventListener('click', closeUsersModal);
     overlay.addEventListener('click', function(ev){ if (ev.target === overlay) closeUsersModal(); });
@@ -2935,6 +3009,7 @@
       return;
     }
     fetchBookings();
+    initPresence();
     realtimeChannel = supabaseClient
       .channel('bookings-changes')
       .on('postgres_changes', {event:'*', schema:'public', table:'bookings'}, function(){ fetchBookings(); })
